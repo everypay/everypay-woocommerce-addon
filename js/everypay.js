@@ -1,18 +1,8 @@
-var $checkout_form = '';
-function init_everypay(rand_id) {
+var $checkout_form;
 
-    $checkout_form = jQuery('.page form.woocommerce-checkout');
-    var form_id = $checkout_form.attr('id');
-
-    if (typeof form_id !== typeof undefined && form_id !== false) {
-        //do nothing
-    } else {
-        //add id to the form
-        form_id = 'checkout_form_everypay'
-        $checkout_form.attr('id', form_id);
-    }    
-    
-    EverypayButton.jsonInit(EVERYPAY_OPC_BUTTON, '#' + form_id);
+function init_everypay() {
+    $checkout_form = jQuery('form.woocommerce-checkout');    
+    EverypayButton.jsonInit(EVERYPAY_OPC_BUTTON, $checkout_form);
 }
 
 open_everypay_button = function(){
@@ -22,6 +12,6 @@ open_everypay_button = function(){
 handleCallback = function (message) {
     $checkout_form.append('<input type="hidden" value="' + message.token + '" name="everypayToken">');    
     $checkout_form.submit();
-    $checkout_form.prepend('<h5>Submitting form.Please wait...</h5>');    
+    $checkout_form.prepend('<div class="woocommerce-info">Submitting form.Please wait...</a></div>');    
 };
 

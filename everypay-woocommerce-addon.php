@@ -33,6 +33,9 @@ function everypay_init()
      */
     function show_everypay_notices($messages = array())
     {
+        if (!class_exists('WC_Payment_Gateway')) {
+            return;
+        }
         global $current_user;
         $user_id = $current_user->ID;
         $evGway = new WC_Everypay_Gateway();
@@ -65,6 +68,9 @@ function everypay_init()
      */
     function nag_everypay()
     {
+        if (!class_exists('WC_Payment_Gateway')) {
+            return;
+        }
         global $current_user;
         $user_id = $current_user->ID;
 
@@ -89,6 +95,9 @@ function everypay_init()
      */
     function add_everypay_js()
     {
+        if (!class_exists('WC_Payment_Gateway')) {
+            return;
+        }
         //show only in checkout page
         if (get_the_ID() != get_option("woocommerce_checkout_page_id", 0)) {
             return;
@@ -110,6 +119,9 @@ function everypay_init()
      */
     function everypay_payment_gateway_disable($available_gateways)
     {
+        if (!class_exists('WC_Payment_Gateway')) {
+            return;
+        }
         global $woocommerce;
         $evGway = new WC_Everypay_Gateway();
 
