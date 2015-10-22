@@ -365,7 +365,13 @@ function everypay_init()
                         setTimeout(function () {
                             init_everypay()
                         }, 1000);
-                    });</script>
+                    });
+                    jQuery('#place_order').on('click', function(e){
+                        e.preventDefault();
+                        e.stopPropagation();
+                        open_everypay_button();
+                    });
+                </script>
                 <script type="text/javascript">
                     //<![CDATA[
                     var EVERYPAY_OPC_BUTTON = {
