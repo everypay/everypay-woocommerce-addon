@@ -377,7 +377,8 @@ function everypay_init()
                     var EVERYPAY_OPC_BUTTON = {
                         amount: "<?php echo $total ?>",
                         description: "<?php echo $description ?>",
-                        key: "<?php echo $this->everypayPublicKey ?>",
+                        key: "<?php echo $this->everypayPublicKey ?>",<?php if (EVERYPAY_SANDBOX) : ?>
+                        sandbox: 1,<?php endif; ?>
                         locale: "<?php echo $locale ?>",
                         callback: "handleCallback"
                     }
