@@ -75,7 +75,7 @@ class Everypay
     private static function getApiEndPoint()
     {
         if (null === self::$apiEndPoint) {
-            self::$apiEndPoint = 'https://api.' . (self::isTestMode() ? 'sandbox.' : '') . 'everypay.gr';
+            self::$apiEndPoint = 'https://' . (self::isTestMode() ? 'sandbox-' : '') . 'api.everypay.gr';
         }
 
         return self::$apiEndPoint;
