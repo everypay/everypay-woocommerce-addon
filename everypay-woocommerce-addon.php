@@ -398,7 +398,7 @@ function everypay_init()
 
                 $responsedata = array(
                     'result' => 'failure',
-                    'refresh' => 'true',
+                    'refresh' => 'false',
                     'messages' => "<div ><script type=\"text/javascript\">"
                     . "EVERYPAY_OPC_BUTTON = " . json_encode($EVDATA) . ";"
                     . "load_everypay();</script></div>",
