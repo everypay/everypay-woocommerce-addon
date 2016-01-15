@@ -362,9 +362,15 @@ function everypay_init()
                 <div class="button-holder"></div>
                 <script type="text/javascript">
                     jQuery(document).ready(function () {
-                        setTimeout(function () {
-                            init_everypay()
-                        }, 1000);
+                        var loadButton = setInterval(function () {
+                            try {
+                                $checkout_form = jQuery('form[name="checkout"]');    
+                                EverypayButton.jsonInit(EVERYPAY_OPC_BUTTON, $checkout_form);
+                                clearInterval(loadButton);
+                            } catch (err) {
+                                //console.log(err);
+                            }
+                        }, 301);
                     });
                     jQuery('#place_order').on('click', function(e){
                         e.preventDefault();
