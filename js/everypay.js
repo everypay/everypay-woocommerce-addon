@@ -1,7 +1,7 @@
 var $checkout_form;
 
 function init_everypay() {
-    $checkout_form = jQuery('form.woocommerce-checkout');    
+    $checkout_form = jQuery('form[name="checkout"]');    
     EverypayButton.jsonInit(EVERYPAY_OPC_BUTTON, $checkout_form);
 }
 
