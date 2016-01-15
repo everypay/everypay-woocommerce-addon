@@ -23,7 +23,6 @@ function everypay_init()
         $methods[] = 'WC_Everypay_Gateway';
         return $methods;
     }
-
     add_filter('woocommerce_payment_gateways', 'add_everypay_gateway_class');
 
     /**
@@ -55,11 +54,10 @@ function everypay_init()
 
         /* Check that the user hasn't already clicked to ignore the message */
         $messages = '<p>' . $messages . '</p>' .
-                sprintf(__('<a href="%1$s">OK. Hide This Notice</a>'), '?' . $nag_name . '=0');
+            sprintf(__('<a href="%1$s">OK. Hide This Notice</a>'), '?' . $nag_name . '=0');
 
         echo "<div class=\"update-nag\">$messages</div>";
     }
-
     add_action('admin_notices', 'show_everypay_notices');
 
     /**
@@ -85,8 +83,14 @@ function everypay_init()
             }
         }
     }
-
     add_action('admin_init', 'nag_everypay');
+
+    function add_everypay_var($vars)
+    {
+        $vars[] = "everypayToken";
+        return $vars;
+    }
+    add_filter('query_vars', 'add_everypay_var');
 
     /**
      * Enqueue the js and css scripts if checkout page
@@ -109,7 +113,6 @@ function everypay_init()
         wp_register_script('everypay', plugins_url('js/everypay.js', __FILE__), array('jquery'), '1.1', true);
         wp_enqueue_script('everypay');
     }
-
     add_action('wp_enqueue_scripts', 'add_everypay_js');
 
     /**
@@ -125,19 +128,19 @@ function everypay_init()
         global $woocommerce;
         $evGway = new WC_Everypay_Gateway();
 
-        if(isset($available_gateways['everypay']) && $evGway->has_issues()){
+        if (isset($available_gateways['everypay']) && $evGway->has_issues()) {
             unset($available_gateways['everypay']);
         }
 
         return $available_gateways;
     }
-
     add_filter('woocommerce_available_payment_gateways', 'everypay_payment_gateway_disable');
 
     if (class_exists('WC_Payment_Gateway')) {
 
         class WC_Everypay_Gateway extends WC_Payment_Gateway
         {
+
             /**
              * The Public key
              *
@@ -213,7 +216,6 @@ function everypay_init()
                     return $messages;
                 }
             }
-
             /*
              * Config the admin options
              *
@@ -221,189 +223,176 @@ function everypay_init()
 
             public function admin_options()
             {
+
                 ?>
                 <h3><?php _e('Everypay addon for Woocommerce', 'woocommerce'); ?></h3>
                 <p><?php _e('Everypay is a company that provides a way for individuals and businesses to accept payments over the Internet.', 'woocommerce'); ?></p>
                 <table class="form-table">
-                <?php $this->generate_settings_html(); ?>
+                    <?php $this->generate_settings_html(); ?>
                 </table>
-                    <?php
+                <?php
+            }
+
+            /**
+             * Form fields
+             *
+             */
+            public function init_form_fields()
+            {
+                $this->form_fields = array(
+                    'enabled' => array(
+                        'title' => __('Enable/Disable', 'woocommerce'),
+                        'type' => 'checkbox',
+                        'label' => __('Enable Everypay', 'woocommerce'),
+                        'default' => 'yes'
+                    ),
+                    'everypay_title' => array(
+                        'title' => __('Title', 'woocommerce'),
+                        'type' => 'text',
+                        'description' => __('This controls the title which the user sees during checkout.', 'woocommerce'),
+                        'default' => __('Pay with Card', 'woocommerce'),
+                        'desc_tip' => true,
+                    ),
+                    'everypayPublicKey' => array(
+                        'title' => __('Public Key', 'woocommerce'),
+                        'type' => 'text',
+                        'description' => __('This is the Public Key found in API Keys in Account Dashboard.', 'woocommerce'),
+                        'default' => '',
+                        'desc_tip' => true,
+                        'placeholder' => 'Everypay Public Key'
+                    ),
+                    'everypaySecretKey' => array(
+                        'title' => __('Secret Key', 'woocommerce'),
+                        'type' => 'text',
+                        'description' => __('This is the Secret Key found in API Keys in Account Dashboard.', 'woocommerce'),
+                        'default' => '',
+                        'desc_tip' => true,
+                        'placeholder' => 'Everypay Secret Key'
+                    ),
+                    'everypay_storecurrency' => array(
+                        'title' => __('Fund Receiving Currency'),
+                        'type' => 'select',
+                        'class' => 'select',
+                        'css' => 'width: 350px;',
+                        'desc_tip' => __('Select the currency in which you like to receive payment the currency that has (*) is unsupported on  American Express Cards.This is independent of store base currency so please update your cart price accordingly.', 'woocommerce'),
+                        'options' => array('USD' => ' United States Dollar', 'EUR' => 'Euro'),
+                        'description' => "<span style='color:red;'>Select the currency in which you like to receive payment the currency that has (*) is unsupported on  American Express Cards.This is independent of store base currency so please update your cart price accordingly.</span>",
+                        'default' => 'EUR',
+                    ),
+                    'everypay_sandbox' => array(
+                        'title' => __('Everypay Sandbox', 'woocommerce'),
+                        'type' => 'checkbox',
+                        'label' => __('Sandbox mode (test)? ', 'woocommerce'),
+                        'description' => __('If checked its in sanbox mode and if unchecked its in live mode', 'woocommerce'),
+                        'desc_tip' => true,
+                        'default' => 'no',
+                    ), /*
+                      'everypay_cardtypes' => array(
+                      'title' => __('Accepted Cards', 'woocommerce'),
+                      'type' => 'multiselect',
+                      'class' => 'chosen_select',
+                      'css' => 'width: 350px;',
+                      'desc_tip' => __('Select the card types to accept.', 'woocommerce'),
+                      'options' => array(
+                      'mastercard' => 'MasterCard',
+                      'visa' => 'Visa',
+                      'discover' => 'Discover',
+                      'amex' => 'American Express',
+                      'jcb' => 'JCB',
+                      'dinersclub' => 'Dinners Club',
+                      ),
+                      'default' => array('mastercard', 'visa'),
+                      ), */
+                );
+            }
+            /* Get Card Types */
+
+            function get_card_type($number)
+            {
+                $number = preg_replace('/[^\d]/', '', $number);
+                if (preg_match('/^3[47][0-9]{13}$/', $number)) {
+                    return 'amex';
+                } elseif (preg_match('/^3(?:0[0-5]|[68][0-9])[0-9]{11}$/', $number)) {
+                    return 'dinersclub';
+                } elseif (preg_match('/^6(?:011|5[0-9][0-9])[0-9]{12}$/', $number)) {
+                    return 'discover';
+                } elseif (preg_match('/^(?:2131|1800|35\d{3})\d{11}$/', $number)) {
+                    return 'jcb';
+                } elseif (preg_match('/^5[1-5][0-9]{14}$/', $number)) {
+                    return 'mastercard';
+                } elseif (preg_match('/^4[0-9]{12}(?:[0-9]{3})?$/', $number)) {
+                    return 'visa';
+                } else {
+                    return 'unknown';
                 }
+            }
 
-                /**
-                 * Form fields
-                 *
-                 */
-                public function init_form_fields()
-                {
-                    $this->form_fields = array(
-                        'enabled' => array(
-                            'title' => __('Enable/Disable', 'woocommerce'),
-                            'type' => 'checkbox',
-                            'label' => __('Enable Everypay', 'woocommerce'),
-                            'default' => 'yes'
-                        ),
-                        'everypay_title' => array(
-                            'title' => __('Title', 'woocommerce'),
-                            'type' => 'text',
-                            'description' => __('This controls the title which the user sees during checkout.', 'woocommerce'),
-                            'default' => __('Pay with Card', 'woocommerce'),
-                            'desc_tip' => true,
-                        ),
-                        'everypayPublicKey' => array(
-                            'title' => __('Public Key', 'woocommerce'),
-                            'type' => 'text',
-                            'description' => __('This is the Public Key found in API Keys in Account Dashboard.', 'woocommerce'),
-                            'default' => '',
-                            'desc_tip' => true,
-                            'placeholder' => 'Everypay Public Key'
-                        ),
-                        'everypaySecretKey' => array(
-                            'title' => __('Secret Key', 'woocommerce'),
-                            'type' => 'text',
-                            'description' => __('This is the Secret Key found in API Keys in Account Dashboard.', 'woocommerce'),
-                            'default' => '',
-                            'desc_tip' => true,
-                            'placeholder' => 'Everypay Secret Key'
-                        ),
-                        'everypay_storecurrency' => array(
-                            'title' => __('Fund Receiving Currency'),
-                            'type' => 'select',
-                            'class' => 'select',
-                            'css' => 'width: 350px;',
-                            'desc_tip' => __('Select the currency in which you like to receive payment the currency that has (*) is unsupported on  American Express Cards.This is independent of store base currency so please update your cart price accordingly.', 'woocommerce'),
-                            'options' => array('USD' => ' United States Dollar', 'EUR' => 'Euro'),
-                            'description' => "<span style='color:red;'>Select the currency in which you like to receive payment the currency that has (*) is unsupported on  American Express Cards.This is independent of store base currency so please update your cart price accordingly.</span>",
-                            'default' => 'EUR',
-                        ),
-                        'everypay_sandbox' => array(
-                            'title' => __('Everypay Sandbox', 'woocommerce'),
-                            'type' => 'checkbox',
-                            'label' => __('Sandbox mode (test)? ', 'woocommerce'),
-                            'description' => __('If checked its in sanbox mode and if unchecked its in live mode', 'woocommerce'),
-                            'desc_tip' => true,
-                            'default' => 'no',
-                        ), /*
-                              'everypay_cardtypes' => array(
-                              'title' => __('Accepted Cards', 'woocommerce'),
-                              'type' => 'multiselect',
-                              'class' => 'chosen_select',
-                              'css' => 'width: 350px;',
-                              'desc_tip' => __('Select the card types to accept.', 'woocommerce'),
-                              'options' => array(
-                              'mastercard' => 'MasterCard',
-                              'visa' => 'Visa',
-                              'discover' => 'Discover',
-                              'amex' => 'American Express',
-                              'jcb' => 'JCB',
-                              'dinersclub' => 'Dinners Club',
-                              ),
-                              'default' => array('mastercard', 'visa'),
-                              ), */
-                    );
-                }
+            //Function to check IP
+            function get_client_ip()
+            {
+                $ipaddress = '';
+                if (getenv('HTTP_CLIENT_IP'))
+                    $ipaddress = getenv('HTTP_CLIENT_IP');
+                else if (getenv('HTTP_X_FORWARDED_FOR'))
+                    $ipaddress = getenv('HTTP_X_FORWARDED_FOR');
+                else if (getenv('HTTP_X_FORWARDED'))
+                    $ipaddress = getenv('HTTP_X_FORWARDED');
+                else if (getenv('HTTP_FORWARDED_FOR'))
+                    $ipaddress = getenv('HTTP_FORWARDED_FOR');
+                else if (getenv('HTTP_FORWARDED'))
+                    $ipaddress = getenv('HTTP_FORWARDED');
+                else if (getenv('REMOTE_ADDR'))
+                    $ipaddress = getenv('REMOTE_ADDR');
+                else
+                    $ipaddress = '0.0.0.0';
+                return $ipaddress;
+            }
 
-                /* Get Card Types */
+            public function payment_fields()
+            {
+                global $woocommerce;
 
-                function get_card_type($number)
-                {
-                    $number = preg_replace('/[^\d]/', '', $number);
-                    if (preg_match('/^3[47][0-9]{13}$/', $number)) {
-                        return 'amex';
-                    } elseif (preg_match('/^3(?:0[0-5]|[68][0-9])[0-9]{11}$/', $number)) {
-                        return 'dinersclub';
-                    } elseif (preg_match('/^6(?:011|5[0-9][0-9])[0-9]{12}$/', $number)) {
-                        return 'discover';
-                    } elseif (preg_match('/^(?:2131|1800|35\d{3})\d{11}$/', $number)) {
-                        return 'jcb';
-                    } elseif (preg_match('/^5[1-5][0-9]{14}$/', $number)) {
-                        return 'mastercard';
-                    } elseif (preg_match('/^4[0-9]{12}(?:[0-9]{3})?$/', $number)) {
-                        return 'visa';
-                    } else {
-                        return 'unknown';
-                    }
-                }
+                $total = $woocommerce->cart->total;
 
-                //Function to check IP
-                function get_client_ip()
-                {
-                    $ipaddress = '';
-                    if (getenv('HTTP_CLIENT_IP'))
-                        $ipaddress = getenv('HTTP_CLIENT_IP');
-                    else if (getenv('HTTP_X_FORWARDED_FOR'))
-                        $ipaddress = getenv('HTTP_X_FORWARDED_FOR');
-                    else if (getenv('HTTP_X_FORWARDED'))
-                        $ipaddress = getenv('HTTP_X_FORWARDED');
-                    else if (getenv('HTTP_FORWARDED_FOR'))
-                        $ipaddress = getenv('HTTP_FORWARDED_FOR');
-                    else if (getenv('HTTP_FORWARDED'))
-                        $ipaddress = getenv('HTTP_FORWARDED');
-                    else if (getenv('REMOTE_ADDR'))
-                        $ipaddress = getenv('REMOTE_ADDR');
-                    else
-                        $ipaddress = '0.0.0.0';
-                    return $ipaddress;
-                }
+                $description = get_bloginfo('name') . ' ' . strip_tags(html_entity_decode(wc_price($total)));
+                $total = preg_replace('#[^\d.]#', '', $total * 100);
+                $locale = 'el'; //explode('_', get_locale())[0];
 
-                public function payment_fields()
-                {
-                    global $woocommerce;
-
-                    $total = $woocommerce->cart->total;
-
-                    $description = get_bloginfo('name') . ' ' . strip_tags(html_entity_decode(wc_price($total)));
-                    $total = preg_replace('#[^\d.]#', '', $total * 100);
-                    $locale = 'el'; //explode('_', get_locale())[0];
-                    ?>
+                ?>
                 <style>
                     .payment_box.payment_method_everypay{text-align: center; display: none !important}
                 </style>
                 <div class="button-holder"></div>
-                <script type="text/javascript">
-                    jQuery(document).ready(function () {
-                        var loadButton = setInterval(function () {
-                            try {
-                                $checkout_form = jQuery('form[name="checkout"]');    
-                                EverypayButton.jsonInit(EVERYPAY_OPC_BUTTON, $checkout_form);
-                                clearInterval(loadButton);
-                            } catch (err) {
-                                //console.log(err);
-                            }
-                        }, 301);
-                    });
-                    jQuery('#place_order').on('click', function(e){
-                        e.preventDefault();
-                        e.stopPropagation();
-                        open_everypay_button();
-                    });
-                </script>
-                <script type="text/javascript">
-                    //<![CDATA[
-                    var EVERYPAY_OPC_BUTTON = {
-                        amount: "<?php echo $total ?>",
-                        description: "<?php echo $description ?>",
-                        key: "<?php echo $this->everypayPublicKey ?>",<?php if (EVERYPAY_SANDBOX) : ?>
-                        sandbox: 1,<?php endif; ?>
-                        locale: "<?php echo $locale ?>",
-                        callback: "handleCallback"
-                    }
-                    //]]>
-                </script>
                 <?php
             }
 
-            private function responseToJson($data)
+            /**
+             * Give command to open the button
+             * 
+             * @return string
+             */
+            public function show_button()
             {
-                $response = '<!--WC_START--><div style="display:none !important">{';
-                $fields = array();
-                foreach ($data as $index => $key) {
-                    $fields [] = "\"$index\":\"$key\"";
-                }
-                $response .= implode(',', $fields);
-                $response .= '}</div><!--WC_END-->';
+                global $woocommerce;
 
-                return $response;
+                $total = $woocommerce->cart->total;
+                $EVDATA = array(
+                    'description' => get_bloginfo('name') . ' ' . strip_tags(html_entity_decode(wc_price($total))),
+                    'amount' => preg_replace('#[^\d.]#', '', $total * 100),
+                    'locale' => 'el',
+                    'sandbox' => (EVERYPAY_SANDBOX ? 1 : 0),
+                    'callback' => "handleCallback",
+                    'key' => $this->everypayPublicKey,
+                );
+
+                $responsedata = array(
+                    'result' => 'failure',
+                    'refresh' => 'true',
+                    'messages' => "<div ><script type=\"text/javascript\">"
+                    . "EVERYPAY_OPC_BUTTON = " . json_encode($EVDATA) . ";"
+                    . "load_everypay();</script></div>",
+                );
+                return json_encode($responsedata);
             }
 
             /**
@@ -417,14 +406,12 @@ function everypay_init()
              */
             public function process_payment($order_id)
             {
+
                 //give command to open the modal box
-                if (!isset($_POST['everypayToken'])) {
-                    $data = array(
-                        'result' => 'failure',
-                        'execute' => "<script type=\"text/javascript\">open_everypay_button()</script>",
-                    );
-                    echo $this->responseToJson($data);
-                    return $data;
+                $token = get_query_var('everypayToken', 0);
+                if (!$token) {
+                    echo $this->show_button();
+                    exit;
                 }
 
                 //continue to payment
@@ -449,7 +436,7 @@ function everypay_init()
                         'amount' => $total,
                         'payee_email' => $wc_order->billing_email,
                         'payee_phone' => $wc_order->billing_phone,
-                        'token' => $_POST['everypayToken']
+                        'token' => get_query_var('everypayToken', 0)
                     );
 
                     Everypay::setApiKey($this->everypaySecretKey);
@@ -467,7 +454,7 @@ function everypay_init()
                         $token = $response['body']['token'];
 
                         $wc_order->add_order_note(__('Everypay payment completed at-' .
-                                        $timestamp . '-with Token ID=' . $token, 'woocommerce'));
+                                $timestamp . '-with Token ID=' . $token, 'woocommerce'));
 
                         $wc_order->payment_complete($token);
                         $wc_order->get_order();
@@ -523,7 +510,7 @@ function everypay_init()
 
                         $wc_order = new WC_Order($order_id);
                         $wc_order->add_order_note(__('Everypay Refund completed at-' .
-                                        $timestamp . '-with Refund Token=' . $refToken, 'woocommerce'));
+                                $timestamp . '-with Refund Token=' . $refToken, 'woocommerce'));
 
                         return true;
                     } else {
@@ -533,10 +520,8 @@ function everypay_init()
                     return false;
                 }
             }
-
         }
 
     }
 }
-
 add_action('plugins_loaded', 'everypay_init');
