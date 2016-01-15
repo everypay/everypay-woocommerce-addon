@@ -169,9 +169,9 @@ function everypay_init()
                 $this->title = $this->get_option('everypay_title');
                 $this->everypayPublicKey = $this->get_option('everypayPublicKey');
                 $this->everypaySecretKey = $this->get_option('everypaySecretKey');
+                $this->everypayMaxInstallments = $this->get_option('everypay_maxinstallments');
                 $this->everypay_storecurrency = $this->get_option('everypay_storecurrency');
                 $this->everypay_sandbox = $this->get_option('everypay_sandbox');
-                //$this->everypay_cardtypes = $this->get_option('everypay_cardtypes');
                 $this->errors = array();
 
                 if (!defined("EVERYPAY_SANDBOX")) {
@@ -286,7 +286,17 @@ function everypay_init()
                         'description' => __('If checked its in sanbox mode and if unchecked its in live mode', 'woocommerce'),
                         'desc_tip' => true,
                         'default' => 'no',
-                    ), /*
+                    ),
+                    'everypay_maxinstallments' => array(
+                        'title' => __('Everypay Max Installments', 'woocommerce'),
+                        'type' => 'number',
+                        'max' => 12,
+                        'min' => 0,
+                        'label' => __('Installments', 'woocommerce'),
+                        'description' => __('Choose the maximum number for installments offered', 'woocommerce'),
+                        'desc_tip' => true,
+                        'default' => '0',
+                    ),/*
                       'everypay_cardtypes' => array(
                       'title' => __('Accepted Cards', 'woocommerce'),
                       'type' => 'multiselect',
@@ -383,6 +393,7 @@ function everypay_init()
                     'sandbox' => (EVERYPAY_SANDBOX ? 1 : 0),
                     'callback' => "handleCallback",
                     'key' => $this->everypayPublicKey,
+                    'max_installments' => $this->everypayMaxInstallments,
                 );
 
                 $responsedata = array(
@@ -436,7 +447,8 @@ function everypay_init()
                         'amount' => $total,
                         'payee_email' => $wc_order->billing_email,
                         'payee_phone' => $wc_order->billing_phone,
-                        'token' => get_query_var('everypayToken', 0)
+                        'token' => get_query_var('everypayToken', 0),
+                        'max_installments' => $this->everypayMaxInstallments
                     );
 
                     Everypay::setApiKey($this->everypaySecretKey);
