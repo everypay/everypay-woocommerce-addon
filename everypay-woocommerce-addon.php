@@ -106,7 +106,7 @@ function everypay_init()
         if (get_the_ID() != get_option("woocommerce_checkout_page_id", 0)) {
             return;
         }
-
+        
         wp_register_script('everypay_script', "https://button.everypay.gr/js/button.js");
         wp_enqueue_script('everypay_script');
 
@@ -158,7 +158,7 @@ function everypay_init()
             public function __construct()
             {
                 $this->id = 'everypay';
-                $this->icon = apply_filters('woocommerce_everypay_icon', plugins_url('images/credit-card.gif', __FILE__));
+                $this->icon = apply_filters('woocommerce_everypay_icon', plugins_url('images/pay-via-everypay.png', __FILE__));
                 $this->has_fields = true;
                 $this->method_title = 'Everypay Cards Settings';
                 $this->init_form_fields();
@@ -363,13 +363,9 @@ function everypay_init()
                 global $woocommerce;
 
                 $total = $woocommerce->cart->total;
-
-                $description = get_bloginfo('name') . ' ' . strip_tags(html_entity_decode(wc_price($total)));
-                $total = preg_replace('#[^\d.]#', '', $total * 100);
-                $locale = 'el'; //explode('_', get_locale())[0];
-
                 ?>
                 <style>
+                    .payment_method_everypay .button-holder{display:none}
                     .payment_box.payment_method_everypay{text-align: center; display: none !important}
                 </style>
                 <div class="button-holder"></div>
@@ -414,17 +410,16 @@ function everypay_init()
              * @param int $order_id
              * @return
              *
-             */
+             */ 
             public function process_payment($order_id)
-            {
-
+            {    
                 //give command to open the modal box
-                $token = get_query_var('everypayToken', 0);
+                $token = isset($_POST['everypayToken']) ? $_POST['everypayToken'] : 0;
                 if (!$token) {
                     echo $this->show_button();
                     exit;
                 }
-
+                
                 //continue to payment
                 global $error, $current_user, $woocommerce;
 
@@ -441,13 +436,13 @@ function everypay_init()
                     $locale = explode('_', get_locale())[0];
 
                     $data = array(
-                        'description' => get_bloginfo('name') . ' '
-                        . 'Order #' . $wc_order->get_order_number() . ' - '
+                        'description' => get_bloginfo('name') . ' / '
+                        . __('Order', 'woocommerce') .' #' . $wc_order->get_order_number() . ' - '
                         . strip_tags(html_entity_decode(wc_price($total / 100))),
                         'amount' => $total,
                         'payee_email' => $wc_order->billing_email,
                         'payee_phone' => $wc_order->billing_phone,
-                        'token' => get_query_var('everypayToken', 0),
+                        'token' => $token,
                         'max_installments' => $this->everypayMaxInstallments
                     );
 

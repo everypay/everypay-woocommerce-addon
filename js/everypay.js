@@ -23,6 +23,6 @@ function load_everypay() {
 
 handleCallback = function (message) {
     $checkout_form.append('<input type="hidden" value="' + message.token + '" name="everypayToken">');
-    $checkout_form.submit();
-    $checkout_form.prepend('<div class="woocommerce-info">Submitting form.Please wait...</a></div>');
+    $checkout_form.find('#place_order').trigger('click');
+    $checkout_form.prepend('<div class="woocommerce-info">Oλοκλήρωση παραγγελίας. Παρακαλούμε περιμένετε...</a></div>');
 };
