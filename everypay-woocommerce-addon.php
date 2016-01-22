@@ -27,10 +27,10 @@ function everypay_init()
 
     function load_everypay_admin()
     {
-        wp_register_script('everypay_script1', plugins_url('js/admin/mustache.min.js', __FILE__), array('jquery'), time(), true);
+        wp_register_script('everypay_script1', plugins_url('js/admin/mustache.min.js', __FILE__), array('jquery'), 'ver', true);
         wp_enqueue_script('everypay_script1');
 
-        wp_register_script('everypay_script2', plugins_url('js/admin/everypay.js', __FILE__), array('jquery'), time(), true);
+        wp_register_script('everypay_script2', plugins_url('js/admin/everypay.js', __FILE__), array('jquery'), 'ver', true);
         wp_enqueue_script('everypay_script2');
     }
     add_action('admin_enqueue_scripts', 'load_everypay_admin');
