@@ -31,7 +31,7 @@ jQuery(document).ready(function ($) {
     var renderedTable = Mustache.render(table, {});
     $('#installments').html(renderedTable);
 
-    var input = $('#woocommerce_everypay_everypay_maxinstallments').val();
+    var input = $('#woocommerce_everypay_everypay_maximum_installments').val();
     if (input) {
         //console.log(input);
         installments = JSON.parse(input);        
@@ -82,7 +82,7 @@ jQuery(document).ready(function ($) {
         } else {
             installments.push(element);
         }
-        $('#woocommerce_everypay_everypay_maxinstallments').val(JSON.stringify(installments));
+        $('#woocommerce_everypay_everypay_maximum_installments').val(JSON.stringify(installments));
     };
 
     var removeInstallment = function (row) {
@@ -97,7 +97,7 @@ jQuery(document).ready(function ($) {
         if (false !== index) {
             installments.splice(index, 1);
         }
-        $('#woocommerce_everypay_everypay_maxinstallments').val(JSON.stringify(installments));
+        $('#woocommerce_everypay_everypay_maximum_installments').val(JSON.stringify(installments));
     };
 
     var elementExists = function (id) {

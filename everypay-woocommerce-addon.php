@@ -179,7 +179,7 @@ function everypay_init()
                 $this->title = $this->get_option('everypay_title');
                 $this->everypayPublicKey = $this->get_option('everypayPublicKey');
                 $this->everypaySecretKey = $this->get_option('everypaySecretKey');
-                $this->everypayMaxInstallments = $this->get_option('everypay_maxinstallments');
+                $this->everypayMaxInstallments = $this->get_option('everypay_maximum_installments');
                 $this->everypay_storecurrency = $this->get_option('everypay_storecurrency');
                 $this->everypay_sandbox = $this->get_option('everypay_sandbox');
                 $this->errors = array();
@@ -324,7 +324,7 @@ function everypay_init()
                         'desc_tip' => true,
                         'default' => 'no',
                     ),
-                    'everypay_maxinstallments' => array(
+                    'everypay_maximum_installments' => array(
                         'title' => __('Everypay Max Installments', 'woocommerce'),
                         'type' => 'hidden',
                         'label' => __('Installments', 'woocommerce'),
