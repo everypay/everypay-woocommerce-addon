@@ -3,7 +3,7 @@
  * Plugin Name: Everypay WooCommerce Addon
  * Plugin URI: https://wordpress.org/plugins/everypay-woocommerce-addon/
  * Description: This plugin adds a payment option in WooCommerce for customers to pay with their Credit Cards Via Everypay.
- * Version: 1.0.2
+ * Version: 1.1.3
  * Author: Everypay S.A.
  * Author URI: https://everypay.gr
  * License: GPL2
@@ -24,6 +24,16 @@ function everypay_init()
         return $methods;
     }
     add_filter('woocommerce_payment_gateways', 'add_everypay_gateway_class');
+
+    function load_everypay_admin()
+    {
+        wp_register_script('everypay_script1', plugins_url('js/admin/mustache.min.js', __FILE__), array('jquery'), time(), true);
+        wp_enqueue_script('everypay_script1');
+
+        wp_register_script('everypay_script2', plugins_url('js/admin/everypay.js', __FILE__), array('jquery'), time(), true);
+        wp_enqueue_script('everypay_script2');
+    }
+    add_action('admin_enqueue_scripts', 'load_everypay_admin');
 
     /**
      * Show some notices on the admin
@@ -106,7 +116,7 @@ function everypay_init()
         if (get_the_ID() != get_option("woocommerce_checkout_page_id", 0)) {
             return;
         }
-        
+
         wp_register_script('everypay_script', "https://button.everypay.gr/js/button.js");
         wp_enqueue_script('everypay_script');
 
@@ -230,6 +240,33 @@ function everypay_init()
                 <table class="form-table">
                     <?php $this->generate_settings_html(); ?>
                 </table>
+                <div id="installments"></div>
+                <div id="installment-table" style="display:none">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Από (Ποσό σε &euro;)</th>
+                                <th>Eως (Ποσό σε &euro;)</th>
+                                <th>Μέγιστος Αρ. Δόσεων</th>
+                                <th>
+                                    <a class="button-primary" href="#" id="add-installment" style="width:101px;">                        
+                                        <i class="icon icon-plus-sign"></i> <span class="ab-icon"></span>  Προσθήκη
+                                    </a>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <style type="text/css">
+                    #everypay-installments table{}
+                    .remove-installment{font-size: 2em; text-decoration: none !important;color:#ee5f5b}
+                    #installment-table table{width:600px;background: white;}                    
+                    #installment-table tr td{border:1px solid #111;}                    
+                    #installments table{width:601px;max-width: 601px;background: #fff; padding:16px;}
+                    #installments table input[type="number"] {width: 99px;}
+                </style>
                 <?php
             }
 
@@ -275,7 +312,7 @@ function everypay_init()
                         'class' => 'select',
                         'css' => 'width: 350px;',
                         'desc_tip' => __('Select the currency in which you like to receive payment the currency that has (*) is unsupported on  American Express Cards.This is independent of store base currency so please update your cart price accordingly.', 'woocommerce'),
-                        'options' => array('USD' => ' United States Dollar', 'EUR' => 'Euro'),
+                        'options' => array('EUR' => 'Euro'),
                         'description' => "<span style='color:red;'>Select the currency in which you like to receive payment the currency that has (*) is unsupported on  American Express Cards.This is independent of store base currency so please update your cart price accordingly.</span>",
                         'default' => 'EUR',
                     ),
@@ -289,33 +326,42 @@ function everypay_init()
                     ),
                     'everypay_maxinstallments' => array(
                         'title' => __('Everypay Max Installments', 'woocommerce'),
-                        'type' => 'number',
-                        'max' => 12,
-                        'min' => 0,
+                        'type' => 'hidden',
                         'label' => __('Installments', 'woocommerce'),
                         'description' => __('Choose the maximum number for installments offered', 'woocommerce'),
                         'desc_tip' => true,
-                        'default' => '0',
-                    ),/*
-                      'everypay_cardtypes' => array(
-                      'title' => __('Accepted Cards', 'woocommerce'),
-                      'type' => 'multiselect',
-                      'class' => 'chosen_select',
-                      'css' => 'width: 350px;',
-                      'desc_tip' => __('Select the card types to accept.', 'woocommerce'),
-                      'options' => array(
-                      'mastercard' => 'MasterCard',
-                      'visa' => 'Visa',
-                      'discover' => 'Discover',
-                      'amex' => 'American Express',
-                      'jcb' => 'JCB',
-                      'dinersclub' => 'Dinners Club',
-                      ),
-                      'default' => array('mastercard', 'visa'),
-                      ), */
+                        'default' => '',
+                    ),
                 );
             }
             /* Get Card Types */
+
+            function everypay_get_installments($total, $ins)
+            {
+                $inst = htmlspecialchars_decode($ins);
+                if ($inst) {
+                    $installments = json_decode($inst, true);
+                    $counter = 1;
+                    $max = 0;
+                    $max_installments = 0;
+                    foreach ($installments as $i) {
+                        if ($i['to'] > $max) {
+                            $max = $i['to'];
+                            $max_installments = $i['max'];
+                        }
+
+                        if (($counter == (count($installments)) && $total >= $max)) {
+                            return $max_installments;
+                        }
+
+                        if ($total >= $i['from'] && $total <= $i['to']) {
+                            return $i['max'];
+                        }
+                        $counter++;
+                    }
+                }
+                return false;
+            }
 
             function get_card_type($number)
             {
@@ -363,12 +409,18 @@ function everypay_init()
                 global $woocommerce;
 
                 $total = $woocommerce->cart->total;
+
                 ?>
                 <style>
                     .payment_method_everypay .button-holder{display:none}
                     .payment_box.payment_method_everypay{text-align: center; display: none !important}
-                </style>
-                <div class="button-holder"></div>
+                    .payment_method_everypay img{
+                        width: 100%;
+                        height: auto;
+                        max-height: none !important;
+                        max-width: 222px;}
+                    </style>
+                    <div class="button-holder"></div>
                 <?php
             }
 
@@ -389,7 +441,7 @@ function everypay_init()
                     'sandbox' => (EVERYPAY_SANDBOX ? 1 : 0),
                     'callback' => "handleCallback",
                     'key' => $this->everypayPublicKey,
-                    'max_installments' => $this->everypayMaxInstallments,
+                    'max_installments' => $this->everypay_get_installments($total, $this->everypayMaxInstallments),
                 );
 
                 $responsedata = array(
@@ -410,16 +462,16 @@ function everypay_init()
              * @param int $order_id
              * @return
              *
-             */ 
+             */
             public function process_payment($order_id)
-            {    
+            {
                 //give command to open the modal box
                 $token = isset($_POST['everypayToken']) ? $_POST['everypayToken'] : 0;
                 if (!$token) {
                     echo $this->show_button();
                     exit;
                 }
-                
+
                 //continue to payment
                 global $error, $current_user, $woocommerce;
 
@@ -437,13 +489,13 @@ function everypay_init()
 
                     $data = array(
                         'description' => get_bloginfo('name') . ' / '
-                        . __('Order', 'woocommerce') .' #' . $wc_order->get_order_number() . ' - '
+                        . __('Order', 'woocommerce') . ' #' . $wc_order->get_order_number() . ' - '
                         . strip_tags(html_entity_decode(wc_price($total / 100))),
                         'amount' => $total,
                         'payee_email' => $wc_order->billing_email,
                         'payee_phone' => $wc_order->billing_phone,
                         'token' => $token,
-                        'max_installments' => $this->everypayMaxInstallments
+                        'max_installments' => $this->everypay_get_installments($total, $this->everypayMaxInstallments),
                     );
 
                     Everypay::setApiKey($this->everypaySecretKey);
