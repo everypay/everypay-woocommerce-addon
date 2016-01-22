@@ -3,7 +3,7 @@
  * Plugin Name: Everypay WooCommerce Addon
  * Plugin URI: https://wordpress.org/plugins/everypay-woocommerce-addon/
  * Description: This plugin adds a payment option in WooCommerce for customers to pay with their Credit Cards Via Everypay.
- * Version: 1.2.3
+ * Version: 1.2.6
  * Author: Everypay S.A.
  * Author URI: https://everypay.gr
  * License: GPL2
@@ -436,7 +436,7 @@ function everypay_init()
                 $total = $woocommerce->cart->total;
                 $EVDATA = array(
                     'description' => get_bloginfo('name') . ' ' . strip_tags(html_entity_decode(wc_price($total))),
-                    'amount' => preg_replace('#[^\d.]#', '', $total * 100),
+                    'amount' => preg_replace("/[^0-9]/", '', $total * 100),
                     'locale' => 'el',
                     'sandbox' => (EVERYPAY_SANDBOX ? 1 : 0),
                     'callback' => "handleCallback",
@@ -479,24 +479,27 @@ function everypay_init()
 
                     $wc_order = new WC_Order($order_id);
                     $grand_total = $wc_order->order_total;
-                    $amount = $grand_total * 100;
+                    $amount = $grand_total;
 
-                    $total = $woocommerce->cart->total;
-
-                    $description = get_bloginfo('name') . ' ' . strip_tags(html_entity_decode(wc_price($total)));
-                    $total = preg_replace("/[^0-9]/", '', $total * 100);
-                    $locale = explode('_', get_locale())[0];
+                    $description = get_bloginfo('name') . ' / '
+                        . __('Order') . ' #' . $wc_order->get_order_number() . ' - '
+                        . strip_tags(html_entity_decode(wc_price($amount)));
+                    $amount = preg_replace("/[^0-9]/", '', $amount * 100);
 
                     $data = array(
-                        'description' => get_bloginfo('name') . ' / '
-                        . __('Order', 'woocommerce') . ' #' . $wc_order->get_order_number() . ' - '
-                        . strip_tags(html_entity_decode(wc_price($total / 100))),
-                        'amount' => $total,
+                        'description' => $description,
+                        'amount' => $amount,
                         'payee_email' => $wc_order->billing_email,
                         'payee_phone' => $wc_order->billing_phone,
                         'token' => $token,
-                        'max_installments' => $this->everypay_get_installments($total, $this->everypayMaxInstallments),
+                        'max_installments' => $this->everypay_get_installments($amount/100, $this->everypayMaxInstallments),
                     );
+                    
+                    // --------------- Enable for debug -------------
+                    /*$error = var_export($data, true);                        
+                    wc_add_notice($error, $notice_type = 'error');
+                    WC()->session->reload_checkout = true;
+                    return;*/
 
                     Everypay::setApiKey($this->everypaySecretKey);
                     $response = Everypay::addPayment($data);
