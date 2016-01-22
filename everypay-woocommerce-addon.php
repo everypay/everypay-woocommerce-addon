@@ -27,11 +27,16 @@ function everypay_init()
 
     function load_everypay_admin()
     {
-        wp_register_script('everypay_script1', plugins_url('js/admin/mustache.min.js', __FILE__), array('jquery'), 'ver', true);
-        wp_enqueue_script('everypay_script1');
+        //page=wc-settings&tab=checkout&section=wc_everypay_gateway
+        if (isset($_GET['page']) && $_GET['page'] == 'wc-settings' 
+            && isset($_GET['tab']) && $_GET['tab'] == 'checkout' 
+            && isset($_GET['section']) && $_GET['section'] == 'wc_everypay_gateway') {
+            wp_register_script('everypay_script1', plugins_url('js/admin/mustache.min.js', __FILE__), array('jquery'), 'ver', true);
+            wp_enqueue_script('everypay_script1');
 
-        wp_register_script('everypay_script2', plugins_url('js/admin/everypay.js', __FILE__), array('jquery'), 'ver', true);
-        wp_enqueue_script('everypay_script2');
+            wp_register_script('everypay_script2', plugins_url('js/admin/everypay.js', __FILE__), array('jquery'), 'ver', true);
+            wp_enqueue_script('everypay_script2');
+        }
     }
     add_action('admin_enqueue_scripts', 'load_everypay_admin');
 
@@ -238,7 +243,7 @@ function everypay_init()
                 <h3><?php _e('Everypay addon for Woocommerce', 'woocommerce'); ?></h3>
                 <p><?php _e('Everypay is a company that provides a way for individuals and businesses to accept payments over the Internet.', 'woocommerce'); ?></p>
                 <table class="form-table">
-                    <?php $this->generate_settings_html(); ?>
+                <?php $this->generate_settings_html(); ?>
                 </table>
                 <div id="installments"></div>
                 <div id="installment-table" style="display:none">
@@ -492,14 +497,14 @@ function everypay_init()
                         'payee_email' => $wc_order->billing_email,
                         'payee_phone' => $wc_order->billing_phone,
                         'token' => $token,
-                        'max_installments' => $this->everypay_get_installments($amount/100, $this->everypayMaxInstallments),
+                        'max_installments' => $this->everypay_get_installments($amount / 100, $this->everypayMaxInstallments),
                     );
-                    
+
                     // --------------- Enable for debug -------------
-                    /*$error = var_export($data, true);                        
-                    wc_add_notice($error, $notice_type = 'error');
-                    WC()->session->reload_checkout = true;
-                    return;*/
+                    /* $error = var_export($data, true);                        
+                      wc_add_notice($error, $notice_type = 'error');
+                      WC()->session->reload_checkout = true;
+                      return; */
 
                     Everypay::setApiKey($this->everypaySecretKey);
                     $response = Everypay::addPayment($data);
