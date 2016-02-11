@@ -17,6 +17,7 @@ function load_everypay() {
 
             clearInterval(loadButton);
         } catch (err) {
+            console.log(err);
         }
     }, 301);
 }
@@ -26,3 +27,8 @@ handleCallback = function (message) {
     $checkout_form.find('#place_order').trigger('click');
     $checkout_form.prepend('<div class="woocommerce-info">Oλοκλήρωση παραγγελίας. Παρακαλούμε περιμένετε...</a></div>');
 };
+
+(function( $ ) {
+    "use strict";
+    $('body').on('change', 'input[name="payment_method"]', function() { $('body').trigger('update_checkout'); });
+})(jQuery);

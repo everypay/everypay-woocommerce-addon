@@ -13,143 +13,16 @@ if (!defined('ABSPATH'))
 
 function everypay_init()
 {
+    global $woocommerce;
+    if (!isset($woocommerce)) {
+        return;
+    }
 
     if (!class_exists('Everypay')) {
         include(plugin_dir_path(__FILE__) . "lib/Everypay.php");
     }
 
-    function add_everypay_gateway_class($methods)
-    {
-        $methods[] = 'WC_Everypay_Gateway';
-        return $methods;
-    }
-    add_filter('woocommerce_payment_gateways', 'add_everypay_gateway_class');
 
-    function load_everypay_admin()
-    {
-        //page=wc-settings&tab=checkout&section=wc_everypay_gateway
-        if (isset($_GET['page']) && $_GET['page'] == 'wc-settings' 
-            && isset($_GET['tab']) && $_GET['tab'] == 'checkout' 
-            && isset($_GET['section']) && $_GET['section'] == 'wc_everypay_gateway') {
-            wp_register_script('everypay_script1', plugins_url('js/admin/mustache.min.js', __FILE__), array('jquery'), 'ver', true);
-            wp_enqueue_script('everypay_script1');
-
-            wp_register_script('everypay_script2', plugins_url('js/admin/everypay.js', __FILE__), array('jquery'), 'ver', true);
-            wp_enqueue_script('everypay_script2');
-        }
-    }
-    add_action('admin_enqueue_scripts', 'load_everypay_admin');
-
-    /**
-     * Show some notices on the admin
-     *
-     * @param array $messages
-     */
-    function show_everypay_notices($messages = array())
-    {
-        if (!class_exists('WC_Payment_Gateway')) {
-            return;
-        }
-        global $current_user;
-        $user_id = $current_user->ID;
-        $evGway = new WC_Everypay_Gateway();
-        $nag_name = $evGway->nag_name;
-
-        if (get_user_meta($user_id, $nag_name)) {
-            return;
-        }
-        $messages = $evGway->has_issues();
-
-        if (!$messages) {
-            return;
-        }
-
-        $messages = array_merge(['Everypay plugin (Pay with card) status is off because: <br />'], $messages);
-        $messages = implode('<br />', $messages);
-
-        /* Check that the user hasn't already clicked to ignore the message */
-        $messages = '<p>' . $messages . '</p>' .
-            sprintf(__('<a href="%1$s">OK. Hide This Notice</a>'), '?' . $nag_name . '=0');
-
-        echo "<div class=\"update-nag\">$messages</div>";
-    }
-    add_action('admin_notices', 'show_everypay_notices');
-
-    /**
-     * Hide notice for this user
-     *
-     */
-    function nag_everypay()
-    {
-        if (!class_exists('WC_Payment_Gateway')) {
-            return;
-        }
-        global $current_user;
-        $user_id = $current_user->ID;
-
-        $evGway = new WC_Everypay_Gateway();
-        $nag_name = $evGway->nag_name;
-        if (isset($_GET[$nag_name]) && '0' == $_GET[$nag_name]) {
-            add_user_meta($user_id, $nag_name, 'true', true);
-            if (wp_get_referer()) {
-                wp_safe_redirect(wp_get_referer());
-            } else {
-                wp_safe_redirect(home_url());
-            }
-        }
-    }
-    add_action('admin_init', 'nag_everypay');
-
-    function add_everypay_var($vars)
-    {
-        $vars[] = "everypayToken";
-        return $vars;
-    }
-    add_filter('query_vars', 'add_everypay_var');
-
-    /**
-     * Enqueue the js and css scripts if checkout page
-     *
-     * @return type
-     */
-    function add_everypay_js()
-    {
-        if (!class_exists('WC_Payment_Gateway')) {
-            return;
-        }
-        //show only in checkout page
-        if (get_the_ID() != get_option("woocommerce_checkout_page_id", 0)) {
-            return;
-        }
-
-        wp_register_script('everypay_script', "https://button.everypay.gr/js/button.js");
-        wp_enqueue_script('everypay_script');
-
-        wp_register_script('everypay', plugins_url('js/everypay.js', __FILE__), array('jquery'), '1.1', true);
-        wp_enqueue_script('everypay');
-    }
-    add_action('wp_enqueue_scripts', 'add_everypay_js');
-
-    /**
-     * Decide wether the plugin is ready to accept payments
-     * according to the settings
-     *
-     */
-    function everypay_payment_gateway_disable($available_gateways)
-    {
-        if (!class_exists('WC_Payment_Gateway')) {
-            return;
-        }
-        global $woocommerce;
-        $evGway = new WC_Everypay_Gateway();
-
-        if (isset($available_gateways['everypay']) && $evGway->has_issues()) {
-            unset($available_gateways['everypay']);
-        }
-
-        return $available_gateways;
-    }
-    add_filter('woocommerce_available_payment_gateways', 'everypay_payment_gateway_disable');
 
     if (class_exists('WC_Payment_Gateway')) {
 
@@ -185,7 +58,7 @@ function everypay_init()
                 $this->everypayPublicKey = $this->get_option('everypayPublicKey');
                 $this->everypaySecretKey = $this->get_option('everypaySecretKey');
                 $this->everypayMaxInstallments = $this->get_option('everypay_maximum_installments');
-                $this->everypay_storecurrency = $this->get_option('everypay_storecurrency');
+                //$this->everypay_storecurrency = $this->get_option('everypay_storecurrency');
                 $this->everypay_sandbox = $this->get_option('everypay_sandbox');
                 $this->errors = array();
 
@@ -197,9 +70,142 @@ function everypay_init()
                     Everypay::setTestMode();
                 }
 
+                // The hooks
+                add_filter('woocommerce_available_payment_gateways', array($this, 'everypay_payment_gateway_disable'));
+                add_filter('woocommerce_payment_gateways', array($this, 'add_everypay_gateway_class'));
+                add_filter('query_vars', array($this, 'add_everypay_var'));
+                add_action('wp_enqueue_scripts', array($this, 'add_everypay_js'));
+                add_action('woocommerce_cart_calculate_fees', array($this, 'calculate_order_totals'));
+
+                add_action('admin_init', array($this, 'nag_everypay'));
+                add_action('admin_notices', array($this, 'show_everypay_notices'));
+                add_action('admin_enqueue_scripts', array($this, 'load_everypay_admin'));
                 if (is_admin()) {
                     add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
                 }
+            }
+
+            /**
+             * Decide wether the plugin is ready to accept payments
+             * according to the settings
+             *
+             */
+            public function everypay_payment_gateway_disable($available_gateways)
+            {
+                global $woocommerce;
+                $evGway = new WC_Everypay_Gateway();
+
+                if (isset($available_gateways['everypay']) && $evGway->has_issues()) {
+                    unset($available_gateways['everypay']);
+                }
+
+                return $available_gateways;
+            }
+
+            /**
+             * Add Everypay payment method
+             * 
+             * @param array $methods
+             */
+            public function add_everypay_gateway_class($methods)
+            {
+                $methods[] = 'WC_Everypay_Gateway';
+                return $methods;
+            }
+
+            /**
+             * Whitelist get param
+             * 
+             * @param array $vars             
+             */
+            public function add_everypay_var($vars)
+            {
+                $vars[] = "everypayToken";
+                return $vars;
+            }
+
+            /**
+             * Hide notice for this user
+             *
+             */
+            public function nag_everypay()
+            {
+                global $current_user;
+                $user_id = $current_user->ID;
+
+                $evGway = new WC_Everypay_Gateway();
+                $nag_name = $evGway->nag_name;
+                if (isset($_GET[$nag_name]) && '0' == $_GET[$nag_name]) {
+                    add_user_meta($user_id, $nag_name, 'true', true);
+                    if (wp_get_referer()) {
+                        wp_safe_redirect(wp_get_referer());
+                    } else {
+                        wp_safe_redirect(home_url());
+                    }
+                }
+            }
+
+            /**
+             * Show some notices on the admin
+             *
+             * @param array $messages
+             */
+            public function show_everypay_notices($messages = array())
+            {
+                global $current_user;
+                $user_id = $current_user->ID;
+                $evGway = new WC_Everypay_Gateway();
+                $nag_name = $evGway->nag_name;
+
+                if (get_user_meta($user_id, $nag_name)) {
+                    return;
+                }
+                $messages = $evGway->has_issues();
+
+                if (!$messages) {
+                    return;
+                }
+
+                $messages = array_merge(['Everypay plugin (Pay with card) status is off because: <br />'], $messages);
+                $messages = implode('<br />', $messages);
+
+                /* Check that the user hasn't already clicked to ignore the message */
+                $messages = '<p>' . $messages . '</p>' .
+                    sprintf(__('<a href="%1$s">OK. Hide This Notice</a>'), '?' . $nag_name . '=0');
+
+                echo "<div class=\"update-nag\">$messages</div>";
+            }
+
+            /**
+             * The scripts on admin tab
+             */
+            public function load_everypay_admin()
+            {
+                //page=wc-settings&tab=checkout&section=wc_everypay_gateway
+                if (isset($_GET['page']) && $_GET['page'] == 'wc-settings' && isset($_GET['tab']) && $_GET['tab'] == 'checkout' && isset($_GET['section']) && $_GET['section'] == 'wc_everypay_gateway') {
+                    wp_register_script('everypay_script1', plugins_url('js/admin/mustache.min.js', __FILE__), array('jquery'), 'ver', true);
+                    wp_enqueue_script('everypay_script1');
+
+                    wp_register_script('everypay_script2', plugins_url('js/admin/everypay.js', __FILE__), array('jquery'), 'ver', true);
+                    wp_enqueue_script('everypay_script2');
+                }
+            }
+
+            /**
+             * Enqueue the js files on frontend
+             */
+            public function add_everypay_js()
+            {
+                //show only in checkout page
+                if (get_the_ID() != get_option("woocommerce_checkout_page_id", 0)) {
+                    return;
+                }
+
+                wp_register_script('everypay_script', "https://button.everypay.gr/js/button.js");
+                wp_enqueue_script('everypay_script');
+
+                wp_register_script('everypay', plugins_url('js/everypay.js', __FILE__), array('jquery'), '1.1', true);
+                wp_enqueue_script('everypay');
             }
 
             /**
@@ -231,10 +237,61 @@ function everypay_init()
                     return $messages;
                 }
             }
-            /*
-             * Config the admin options
+
+            /**
+             * Add extra charge to cart totals
              *
+             * @param double $totals
+             * return double
              */
+            public function calculate_order_totals($cart)
+            {
+                if (!defined('WOOCOMMERCE_CHECKOUT')) {
+                    return;
+                }
+
+                $total = $cart->cart_contents_total + $cart->shipping_total;
+                
+                $fee_name = 'Payment fee';
+                $fee_id = 'payment-fee';
+                $fees = $cart->get_fees();
+                
+                $already_exists = false;
+                foreach ($fees as $i => $fee) {
+                    if ($fee->id == $fee_id) {
+                        $already_exists = true;
+                    } else {
+                        $total += $fee->amount;
+                    }
+                } 
+                if (WC()->session->chosen_payment_method != 'everypay'){                   
+                    return;
+                }
+                
+                if ($this->get_option('everypay_fee_enabled') !== 'yes'){
+                    return;
+                }
+                
+                if ($already_exists){
+                    return;
+                }                
+
+                $fee = floatval($this->get_option('everypay_fee_percent'));
+                $c   = floatval($this->get_option('everypay_fee_amount'));
+
+                $fee_amount = $total*$fee/100 + $c;
+                
+                if (!$already_exists) {
+                    $cart->add_fee($fee_name, $fee_amount);
+                } else {
+                    foreach ($fees as $i => $fee) {
+                        if ($fee->id == $fee_id) {
+                            $fees[$i]->amount = $fee_amount;
+                            break;
+                        }
+                    }
+                }
+            }
 
             public function admin_options()
             {
@@ -311,16 +368,16 @@ function everypay_init()
                         'desc_tip' => true,
                         'placeholder' => 'Everypay Secret Key'
                     ),
-                    'everypay_storecurrency' => array(
-                        'title' => __('Fund Receiving Currency'),
-                        'type' => 'select',
-                        'class' => 'select',
-                        'css' => 'width: 350px;',
-                        'desc_tip' => __('Select the currency in which you like to receive payment the currency that has (*) is unsupported on  American Express Cards.This is independent of store base currency so please update your cart price accordingly.', 'woocommerce'),
-                        'options' => array('EUR' => 'Euro'),
-                        'description' => "<span style='color:red;'>Select the currency in which you like to receive payment the currency that has (*) is unsupported on  American Express Cards.This is independent of store base currency so please update your cart price accordingly.</span>",
-                        'default' => 'EUR',
-                    ),
+                    /* 'everypay_storecurrency' => array(
+                      'title' => __('Fund Receiving Currency'),
+                      'type' => 'select',
+                      'class' => 'select',
+                      'css' => 'width: 350px;',
+                      'desc_tip' => __('Select the currency in which you like to receive payment the currency that has (*) is unsupported on  American Express Cards.This is independent of store base currency so please update your cart price accordingly.', 'woocommerce'),
+                      'options' => array('EUR' => 'Euro'),
+                      'description' => "<span style='color:red;'>Select the currency in which you like to receive payment the currency that has (*) is unsupported on  American Express Cards.This is independent of store base currency so please update your cart price accordingly.</span>",
+                      'default' => 'EUR',
+                      ), */
                     'everypay_sandbox' => array(
                         'title' => __('Everypay Sandbox', 'woocommerce'),
                         'type' => 'checkbox',
@@ -328,6 +385,32 @@ function everypay_init()
                         'description' => __('If checked its in sanbox mode and if unchecked its in live mode', 'woocommerce'),
                         'desc_tip' => true,
                         'default' => 'no',
+                    ),
+                    'everypay_fee_enabled' => array(
+                        'title' => __('Apply Extra fee', 'woocommerce'),
+                        'type' => 'checkbox',
+                        'label' => __('Enable', 'woocommerce'),
+                        'description' => __('Allows the fee to be paid by the customer', 'woocommerce'),
+                        'desc_tip' => true,
+                        'default' => 'no',
+                    ),
+                    'everypay_fee_percent' => array(
+                        'title' => __('Fee Percentage (%)', 'woocommerce'),
+                        'type' => 'number',
+                        'class' => 'everypay-fee-percentage',
+                        'label' => __('Fee Percentage', 'woocommerce'),
+                        'description' => __('Percentage of the fee that is applied from the gateway (Everypay). <br />Type 2,4 if your percentage is 2,4%. Leave 0 if no percentage fee is applied', 'woocommerce'),
+                        'desc_tip' => __("Percentage of the fee that is applied from the gateway (Everypay). <br />Type 2,4 if your percentage is 2,4%. Leave 0 if no percentage fee is applied", 'woocommerce'),
+                        'default' => '0',
+                    ),
+                    'everypay_fee_amount' => array(
+                        'title' => __('Fee Amount (&euro;)', 'woocommerce'),
+                        'type' => 'number',
+                        'class' => 'everypay-fee-fixed',
+                        'label' => __('Fee fixed amount', 'woocommerce'),
+                        'description' => "Fixed amount of the fee that is applied from the gateway (Everypay). <br />For eg. Type 0,20&euro; etc. Leave 0 if no fixed amount fee is applied",
+                        'desc_tip' => "Fixed amount of the fee that is applied from the gateway (Everypay). <br />For eg. Type 0,20&euro; etc. Leave 0 if no fixed amount fee is applied",
+                        'default' => '0',
                     ),
                     'everypay_maximum_installments' => array(
                         'title' => __('Everypay Max Installments', 'woocommerce'),
@@ -339,7 +422,6 @@ function everypay_init()
                     ),
                 );
             }
-            /* Get Card Types */
 
             function everypay_get_installments($total, $ins)
             {
@@ -366,47 +448,6 @@ function everypay_init()
                     }
                 }
                 return false;
-            }
-
-            function get_card_type($number)
-            {
-                $number = preg_replace('/[^\d]/', '', $number);
-                if (preg_match('/^3[47][0-9]{13}$/', $number)) {
-                    return 'amex';
-                } elseif (preg_match('/^3(?:0[0-5]|[68][0-9])[0-9]{11}$/', $number)) {
-                    return 'dinersclub';
-                } elseif (preg_match('/^6(?:011|5[0-9][0-9])[0-9]{12}$/', $number)) {
-                    return 'discover';
-                } elseif (preg_match('/^(?:2131|1800|35\d{3})\d{11}$/', $number)) {
-                    return 'jcb';
-                } elseif (preg_match('/^5[1-5][0-9]{14}$/', $number)) {
-                    return 'mastercard';
-                } elseif (preg_match('/^4[0-9]{12}(?:[0-9]{3})?$/', $number)) {
-                    return 'visa';
-                } else {
-                    return 'unknown';
-                }
-            }
-
-            //Function to check IP
-            function get_client_ip()
-            {
-                $ipaddress = '';
-                if (getenv('HTTP_CLIENT_IP'))
-                    $ipaddress = getenv('HTTP_CLIENT_IP');
-                else if (getenv('HTTP_X_FORWARDED_FOR'))
-                    $ipaddress = getenv('HTTP_X_FORWARDED_FOR');
-                else if (getenv('HTTP_X_FORWARDED'))
-                    $ipaddress = getenv('HTTP_X_FORWARDED');
-                else if (getenv('HTTP_FORWARDED_FOR'))
-                    $ipaddress = getenv('HTTP_FORWARDED_FOR');
-                else if (getenv('HTTP_FORWARDED'))
-                    $ipaddress = getenv('HTTP_FORWARDED');
-                else if (getenv('REMOTE_ADDR'))
-                    $ipaddress = getenv('REMOTE_ADDR');
-                else
-                    $ipaddress = '0.0.0.0';
-                return $ipaddress;
             }
 
             public function payment_fields()
@@ -590,5 +631,9 @@ function everypay_init()
         }
 
     }
+
+    new WC_Everypay_Gateway();
 }
 add_action('plugins_loaded', 'everypay_init');
+
+

@@ -17,7 +17,7 @@ jQuery(document).ready(function ($) {
             });
         }
     }
-    
+
     var installments = [];
     var row = "<tr data-id=\"{{id}}\">"
             + "<td><input type=\"number\" step=\"0.01\" min=\"0\" name=\"amount_{{id}}_from\" value=\"{{from}}\" class=\"form-control\" /></td>"
@@ -34,19 +34,19 @@ jQuery(document).ready(function ($) {
     var input = $('#woocommerce_everypay_everypay_maximum_installments').val();
     if (input) {
         //console.log(input);
-        installments = JSON.parse(input);        
+        installments = JSON.parse(input);
         createElements();
     }
 
     $('#add-installment').click(function (e) {
-        
+
         e.preventDefault();
         var maxRows = maxElementIndex();
 
         Mustache.parse(row);
         var element = {id: maxRows, from: 0, to: 100, max: 12};
         var renderedRow = Mustache.render(row, element);
-        
+
         $row = $(renderedRow);
 
         var max = findMaxAmount();
@@ -134,7 +134,28 @@ jQuery(document).ready(function ($) {
     }
 
 
+    // -------- The extra fess section ------- //
+    $('.everypay-fee-percentage').attr('step', '0.1');
+    $('.everypay-fee-fixed').attr('step', '0.01');
+    $extra_fee = $('#woocommerce_everypay_everypay_fee_enabled');
+    function show_hide_extra_fees() {
+        var $trs = $('.everypay-fee-percentage, .everypay-fee-fixed').parents('tr')
+        if ($extra_fee.is(":checked"))
+        {
+            $trs.show()
+        } else {
+            $trs.hide()
+        }
+    }
     
+    $extra_fee.bind('change', function(){
+        show_hide_extra_fees()
+    })
+    
+    //trigger init
+    show_hide_extra_fees();
+
+
 });
 
 
