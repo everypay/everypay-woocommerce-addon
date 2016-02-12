@@ -3,7 +3,7 @@
  * Plugin Name: Everypay WooCommerce Addon
  * Plugin URI: https://wordpress.org/plugins/everypay-woocommerce-addon/
  * Description: This plugin adds a payment option in WooCommerce for customers to pay with their Credit Cards Via Everypay.
- * Version: 1.2.8
+ * Version: 1.2.9
  * Author: Everypay S.A.
  * Author URI: https://everypay.gr
  * License: GPL2
@@ -278,8 +278,10 @@ function everypay_init()
 
                 $fee = floatval($this->get_option('everypay_fee_percent'));
                 $c = floatval($this->get_option('everypay_fee_amount'));
-
-                $fee_amount = $total * $fee / 100 + $c;
+                
+                $newtotal = (($total + $c) * 100) / (100 - $fee);
+                
+                $fee_amount = $newtotal - $total;
 
                 if (!$already_exists) {
                     $cart->add_fee($fee_name, $fee_amount);
