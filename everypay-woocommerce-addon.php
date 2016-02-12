@@ -401,8 +401,8 @@ function everypay_init()
                         'type' => 'number',
                         'class' => 'everypay-fee-percentage',
                         'label' => __('Fee Percentage', 'woocommerce'),
-                        'description' => __('Percentage of the fee that is applied from the gateway (Everypay). <br />Type 2,4 if your percentage is 2,4%. Leave 0 if no percentage fee is applied', 'woocommerce'),
-                        'desc_tip' => __("Percentage of the fee that is applied from the gateway (Everypay). <br />Type 2,4 if your percentage is 2,4%. Leave 0 if no percentage fee is applied", 'woocommerce'),
+                        'description' => __('Percentage of the fee that is applied from the gateway (Everypay). <br />Type 2.4 if your percentage is 2,4%. Leave 0 if no percentage fee is applied', 'woocommerce'),
+                        'desc_tip' => __("Percentage of the fee that is applied from the gateway (Everypay). <br />Type 2.4 if your percentage is 2,4%. Leave 0 if no percentage fee is applied", 'woocommerce'),
                         'default' => '0',
                     ),
                     'everypay_fee_amount' => array(
@@ -410,8 +410,8 @@ function everypay_init()
                         'type' => 'number',
                         'class' => 'everypay-fee-fixed',
                         'label' => __('Fee fixed amount', 'woocommerce'),
-                        'description' => "Fixed amount of the fee that is applied from the gateway (Everypay). <br />For eg. Type 0,20&euro; etc. Leave 0 if no fixed amount fee is applied",
-                        'desc_tip' => "Fixed amount of the fee that is applied from the gateway (Everypay). <br />For eg. Type 0,20&euro; etc. Leave 0 if no fixed amount fee is applied",
+                        'description' => __("Fixed amount of the fee that is applied from the gateway (Everypay). <br />For eg. type 0.20&euro; etc. Leave 0 if no fixed amount fee is applied", 'woocommerce'),
+                        'desc_tip' => __("Fixed amount of the fee that is applied from the gateway (Everypay). <br />For eg. type 0.20&euro; etc. Leave 0 if no fixed amount fee is applied", 'woocommerce'),
                         'default' => '0',
                     ),
                     'everypay_error_message' => array(
@@ -463,7 +463,6 @@ function everypay_init()
             public function payment_fields()
             {
                 global $woocommerce;
-
                 $total = $woocommerce->cart->total;
 
                 ?>
