@@ -3,7 +3,7 @@
  * Plugin Name: Everypay WooCommerce Addon
  * Plugin URI: https://wordpress.org/plugins/everypay-woocommerce-addon/
  * Description: This plugin adds a payment option in WooCommerce for customers to pay with their Credit Cards Via Everypay.
- * Version: 1.2.6
+ * Version: 1.2.8
  * Author: Everypay S.A.
  * Author URI: https://everypay.gr
  * License: GPL2
@@ -251,11 +251,11 @@ function everypay_init()
                 }
 
                 $total = $cart->cart_contents_total + $cart->shipping_total;
-                
+
                 $fee_name = 'Payment fee';
                 $fee_id = 'payment-fee';
                 $fees = $cart->get_fees();
-                
+
                 $already_exists = false;
                 foreach ($fees as $i => $fee) {
                     if ($fee->id == $fee_id) {
@@ -263,24 +263,24 @@ function everypay_init()
                     } else {
                         $total += $fee->amount;
                     }
-                } 
-                if (WC()->session->chosen_payment_method != 'everypay'){                   
+                }
+                if (WC()->session->chosen_payment_method != 'everypay') {
                     return;
                 }
-                
-                if ($this->get_option('everypay_fee_enabled') !== 'yes'){
+
+                if ($this->get_option('everypay_fee_enabled') !== 'yes') {
                     return;
                 }
-                
-                if ($already_exists){
+
+                if ($already_exists) {
                     return;
-                }                
+                }
 
                 $fee = floatval($this->get_option('everypay_fee_percent'));
-                $c   = floatval($this->get_option('everypay_fee_amount'));
+                $c = floatval($this->get_option('everypay_fee_amount'));
 
-                $fee_amount = $total*$fee/100 + $c;
-                
+                $fee_amount = $total * $fee / 100 + $c;
+
                 if (!$already_exists) {
                     $cart->add_fee($fee_name, $fee_amount);
                 } else {
@@ -300,7 +300,7 @@ function everypay_init()
                 <h3><?php _e('Everypay addon for Woocommerce', 'woocommerce'); ?></h3>
                 <p><?php _e('Everypay is a company that provides a way for individuals and businesses to accept payments over the Internet.', 'woocommerce'); ?></p>
                 <table class="form-table">
-                <?php $this->generate_settings_html(); ?>
+                    <?php $this->generate_settings_html(); ?>
                 </table>
                 <div id="installments"></div>
                 <div id="installment-table" style="display:none">
@@ -411,6 +411,14 @@ function everypay_init()
                         'description' => "Fixed amount of the fee that is applied from the gateway (Everypay). <br />For eg. Type 0,20&euro; etc. Leave 0 if no fixed amount fee is applied",
                         'desc_tip' => "Fixed amount of the fee that is applied from the gateway (Everypay). <br />For eg. Type 0,20&euro; etc. Leave 0 if no fixed amount fee is applied",
                         'default' => '0',
+                    ),
+                    'everypay_error_message' => array(
+                        'title' => __('Error message', 'woocommerce'),
+                        'type' => 'textarea',
+                        'label' => __('Error message', 'woocommerce'),
+                        'description' => __('Please type a universal error message to display to the customer. Leave empty to show the default error.', 'woocommerce'),
+                        'desc_tip' => __('Please type a universal error message to display to the customer. Leave empty to show the default error.', 'woocommerce'),
+                        'default' => '',
                     ),
                     'everypay_maximum_installments' => array(
                         'title' => __('Everypay Max Installments', 'woocommerce'),
@@ -552,6 +560,11 @@ function everypay_init()
 
                     if (isset($response['body']['error'])) {
                         $error = $response['body']['error']['message'];
+
+                        if (!empty(trim($this->get_option('everypay_error_message')))) {
+                            $error = $this->get_option('everypay_error_message');
+                        }
+
                         wc_add_notice($error, $notice_type = 'error');
                         WC()->session->reload_checkout = true;
                     } else {
@@ -579,6 +592,9 @@ function everypay_init()
                     }
                 } catch (\Exception $e) {
                     $error = $e->getMessage();
+                    if (!empty(trim($this->get_option('everypay_error_message')))) {
+                        $error = $this->get_option('everypay_error_message');
+                    }
                     wc_add_notice($error, $notice_type = 'error');
                     WC()->session->reload_checkout = true;
                 }
