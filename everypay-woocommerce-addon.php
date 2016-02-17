@@ -501,7 +501,7 @@ function everypay_init()
             {
                 global $woocommerce;
                 $amount = '';
-                if ($this->description) :
+                if (mb_strlen($this->description)) :
                     $fee_id = 'payment-fee';
                     $fees = $woocommerce->cart->get_fees();
                     foreach ($fees as $i => $fee) {
@@ -510,13 +510,17 @@ function everypay_init()
                             break;
                         }
                     }
-
                     ?>
                     <p><?php echo str_replace('%AMOUNT%', $amount, $this->description); ?></p>
                 <?php endif; ?>
                 <style type="text/css">
                     .payment_method_everypay .button-holder{display:none}
-                    .payment_box.payment_method_everypay{text-align: center;}
+                    .payment_box.payment_method_everypay{
+                        text-align: center;
+                    <?php if (!mb_strlen($this->description)):?>
+                    display: none !important;
+                    <?php endif; ?>
+                    }
                     .payment_method_everypay img{
                         width: 100%;
                         height: auto;
