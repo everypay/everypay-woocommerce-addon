@@ -55,12 +55,15 @@ function everypay_init()
                 $this->supports = array('products', 'refunds');
                 $this->nag_name = 'everypay_nag_notice_' . date('W');
                 $this->title = $this->get_option('everypay_title');
+                $this->description = $this->get_option('description');
                 $this->everypayPublicKey = $this->get_option('everypayPublicKey');
                 $this->everypaySecretKey = $this->get_option('everypaySecretKey');
                 $this->everypayMaxInstallments = $this->get_option('everypay_maximum_installments');
                 //$this->everypay_storecurrency = $this->get_option('everypay_storecurrency');
                 $this->everypay_sandbox = $this->get_option('everypay_sandbox');
                 $this->errors = array();
+
+                $this->fee = 0;
 
                 if (!defined("EVERYPAY_SANDBOX")) {
                     define("EVERYPAY_SANDBOX", ($this->everypay_sandbox == 'yes' ? true : false));
@@ -286,9 +289,9 @@ function everypay_init()
                     return;
                 }
 
-                if ($already_exists) {
-                    return;
-                }
+                /* if ($already_exists) {
+                  return;
+                  } */
 
                 $fee = floatval($this->get_option('everypay_fee_percent'));
                 $c = floatval($this->get_option('everypay_fee_amount'));
@@ -307,6 +310,8 @@ function everypay_init()
                         }
                     }
                 }
+
+                $this->fee = $fee_amount;
             }
 
             public function admin_options()
@@ -317,39 +322,45 @@ function everypay_init()
                 <p><?php _e('Everypay is a company that provides a way for individuals and businesses to accept payments over the Internet.', 'woocommerce'); ?></p>
                 <table class="form-table">
                     <?php $this->generate_settings_html(); ?>
-                </table>
-                <div id="installments"></div>
-                <div id="installment-table" style="display:none">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Από (Ποσό σε &euro;)</th>
-                                <th>Eως (Ποσό σε &euro;)</th>
-                                <th>Μέγιστος Αρ. Δόσεων</th>
-                                <th>
-                                    <a class="button-primary" href="#" id="add-installment" style="width:101px;">                        
-                                        <i class="icon icon-plus-sign"></i> <span class="ab-icon"></span>  Προσθήκη
-                                    </a>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                </div>
-                <style type="text/css">
-                    #everypay-installments table{}
-                    .remove-installment{font-size: 2em; text-decoration: none !important;color:#ee5f5b}
-                    #installment-table table{width:600px;background: white;}                    
-                    #installment-table tr td{border:1px solid #111;}                    
-                    #installments table{width:601px;max-width: 601px;background: #fff; padding:16px;}
-                    #installments table input[type="number"] {width: 99px;}
-                </style>
+                    <tr valign="top">
+                        <th scope="row" class="titledesc" style="padding-top:0">&nbsp;</th>
+                        <td class="forminp" id="everypay-max_installments-table" style="padding-top:0">
+                            <div id="installments"></div>
+                            <div id="installment-table" style="display:none">
+                                <table class="widefat wc_input_table table" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Από (Ποσό σε &euro;)</th>
+                                            <th>Eως (Ποσό σε &euro;)</th>
+                                            <th>Μέγιστος Αρ. Δόσεων</th>
+                                            <th>
+                                                <a class="button-primary" href="#" id="add-installment" style="width:101px;">                        
+                                                    <i class="icon icon-plus-sign"></i> <span class="ab-icon"></span>  Προσθήκη
+                                                </a>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <style type="text/css">
+                                #everypay-max_installments-table table{border:none}
+                                .remove-installment{font-size: 2em; text-decoration: none !important;color:#ee5f5b}
+                                #installment-table table{width:600px;background: white;}                    
+                                #everypay-max_installments-table table tr td,
+                                #everypay-max_installments-table table tr th{border:none;border-bottom:1px solid #f2f2f2}                    
+                                #everypay-max_installments-table{width:100%;max-width: 801px;background: #fff; padding:16px;}
+                                #everypay-max_installments-table table input[type="number"] {width: 99px;}
+                            </style>                            
+                        </td>
+                    </tr>
+                </table>                
                 <?php
             }
 
             /**
-             * Form fields
+             * Form fields for the admin
              *
              */
             public function init_form_fields()
@@ -367,6 +378,13 @@ function everypay_init()
                         'description' => __('This controls the title which the user sees during checkout.', 'woocommerce'),
                         'default' => __('Pay with Card', 'woocommerce'),
                         'desc_tip' => true,
+                    ),
+                    'description' => array(
+                        'title' => __('Description', 'woocommerce'),
+                        'type' => 'textarea',
+                        'description' => __('Payment method description that the customer will see on your website. If there is an extra fee, you can display it by using the keyword %AMOUNT% in your text. For eg. There will be an extra charge of %AMOUNT%', 'woocommerce'),
+                        'default' => __('Pay using your credit or debit card.', 'woocommerce'),
+                        'desc_tip' => __('Payment method description that the customer will see on your website. If there is an extra fee, you can display it by using the keyword %AMOUNT% in your text. For eg. There will be an extra charge of %AMOUNT%'),
                     ),
                     'everypayPublicKey' => array(
                         'title' => __('Public Key', 'woocommerce'),
@@ -440,8 +458,8 @@ function everypay_init()
                         'title' => __('Everypay Max Installments', 'woocommerce'),
                         'type' => 'hidden',
                         'label' => __('Installments', 'woocommerce'),
-                        'description' => __('Choose the maximum number for installments offered', 'woocommerce'),
-                        'desc_tip' => true,
+                        'description' => __('Configure the amount of installments offered depending on the amount of the order. Leave emprt if no installments are offered at all', 'woocommerce'),
+                        'desc_tip' => __('Choose the maximum number for installments offered', 'woocommerce'),
                         'default' => '',
                     ),
                 );
@@ -474,15 +492,31 @@ function everypay_init()
                 return false;
             }
 
+            /**
+             * The html displayed right after the radio button option
+             * 
+             * @global type $woocommerce
+             */
             public function payment_fields()
             {
                 global $woocommerce;
-                $total = $woocommerce->cart->total;
+                $amount = '';
+                if ($this->description) :
+                    $fee_id = 'payment-fee';
+                    $fees = $woocommerce->cart->get_fees();
+                    foreach ($fees as $i => $fee) {
+                        if ($fee->id == $fee_id) {
+                            $amount = wc_price($fee->amount);
+                            break;
+                        }
+                    }
 
-                ?>
-                <style>
+                    ?>
+                    <p><?php echo str_replace('%AMOUNT%', $amount, $this->description); ?></p>
+                <?php endif; ?>
+                <style type="text/css">
                     .payment_method_everypay .button-holder{display:none}
-                    .payment_box.payment_method_everypay{text-align: center; display: none !important}
+                    .payment_box.payment_method_everypay{text-align: center;}
                     .payment_method_everypay img{
                         width: 100%;
                         height: auto;
@@ -526,8 +560,6 @@ function everypay_init()
             /**
              * Used to proccess the payment
              *
-             * @global type $error
-             * @global type $woocommerce
              * @param int $order_id
              * @return
              *
@@ -553,7 +585,7 @@ function everypay_init()
                     $description = get_bloginfo('name') . ' / '
                         . __('Order') . ' #' . $wc_order->get_order_number() . ' - '
                         . strip_tags(html_entity_decode(wc_price($amount)));
-                    $amount = preg_replace("/[^0-9]/", '', $amount * 100);
+                    $amount = preg_replace("/[^0-9]/", '', number_format($amount, 2));
 
                     $data = array(
                         'description' => $description,
@@ -633,7 +665,7 @@ function everypay_init()
 
                 try {
                     $params = array(
-                        'amount' => preg_replace("/[^0-9]/", '', $amount),
+                        'amount' => preg_replace("/[^0-9]/", '', number_format($amount, 2)),
                         'description' => $reason
                     );
 
