@@ -3,7 +3,7 @@
  * Plugin Name: Everypay WooCommerce Addon
  * Plugin URI: https://wordpress.org/plugins/everypay-woocommerce-addon/
  * Description: This plugin adds a payment option in WooCommerce for customers to pay with their Credit Cards Via Everypay.
- * Version: 1.3.1
+ * Version: 1.3.3
  * Author: Everypay S.A.
  * Author URI: https://everypay.gr
  * License: GPL2
@@ -169,7 +169,7 @@ function everypay_init()
                     return;
                 }
 
-                $messages = array_merge(['Everypay plugin (Pay with card) status is off because: <br />'], $messages);
+                $messages = array_merge(array('Everypay plugin (Pay with card) status is off because: <br />'), $messages);
                 $messages = implode('<br />', $messages);
 
                 /* Check that the user hasn't already clicked to ignore the message */
@@ -510,6 +510,7 @@ function everypay_init()
                             break;
                         }
                     }
+
                     ?>
                     <p><?php echo str_replace('%AMOUNT%', $amount, $this->description); ?></p>
                 <?php endif; ?>
@@ -517,9 +518,9 @@ function everypay_init()
                     .payment_method_everypay .button-holder{display:none}
                     .payment_box.payment_method_everypay{
                         text-align: center;
-                    <?php if (!mb_strlen($this->description)):?>
-                    display: none !important;
-                    <?php endif; ?>
+                        <?php if (!mb_strlen($this->description)): ?>
+                            display: none !important;
+                <?php endif; ?>
                     }
                     .payment_method_everypay img{
                         width: 100%;
@@ -585,11 +586,12 @@ function everypay_init()
                     $wc_order = new WC_Order($order_id);
                     $grand_total = $wc_order->order_total;
                     $amount = $grand_total;
+                    
+                    $amount = preg_replace("/[^0-9]/", '', number_format($amount, 2));
 
                     $description = get_bloginfo('name') . ' / '
                         . __('Order') . ' #' . $wc_order->get_order_number() . ' - '
-                        . strip_tags(html_entity_decode(wc_price($amount)));
-                    $amount = preg_replace("/[^0-9]/", '', number_format($amount, 2));
+                        . number_format($amount/100, 2, ',', '.') . '€';
 
                     $data = array(
                         'description' => $description,
@@ -612,7 +614,8 @@ function everypay_init()
                     if (isset($response['body']['error'])) {
                         $error = $response['body']['error']['message'];
 
-                        if (!empty(trim($this->get_option('everypay_error_message')))) {
+                        $trimmed = trim($this->get_option('everypay_error_message'));
+                        if (!empty($trimmed)) {
                             $error = $this->get_option('everypay_error_message');
                         }
 
@@ -643,7 +646,8 @@ function everypay_init()
                     }
                 } catch (\Exception $e) {
                     $error = $e->getMessage();
-                    if (!empty(trim($this->get_option('everypay_error_message')))) {
+                    $trimmed = trim($this->get_option('everypay_error_message'));
+                    if (!empty($trimmed)) {
                         $error = $this->get_option('everypay_error_message');
                     }
                     wc_add_notice($error, $notice_type = 'error');
@@ -702,5 +706,3 @@ function everypay_init()
     new WC_Everypay_Gateway();
 }
 add_action('plugins_loaded', 'everypay_init');
-
-
