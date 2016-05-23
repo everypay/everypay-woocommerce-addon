@@ -3,7 +3,7 @@
  * Plugin Name: Everypay WooCommerce Addon
  * Plugin URI: https://wordpress.org/plugins/everypay-woocommerce-addon/
  * Description: This plugin adds a payment option in WooCommerce for customers to pay with their Credit Cards Via Everypay.
- * Version: 1.3.3
+ * Version: 1.3.4
  * Author: Everypay S.A.
  * Author URI: https://everypay.gr
  * License: GPL2
@@ -107,7 +107,7 @@ function everypay_init()
 
             /**
              * Add Everypay payment method
-             * 
+             *
              * @param array $methods
              */
             public function add_everypay_gateway_class($methods)
@@ -118,8 +118,8 @@ function everypay_init()
 
             /**
              * Whitelist get param
-             * 
-             * @param array $vars             
+             *
+             * @param array $vars
              */
             public function add_everypay_var($vars)
             {
@@ -207,7 +207,7 @@ function everypay_init()
                 wp_register_script('everypay_script', "https://button.everypay.gr/js/button.js");
                 wp_enqueue_script('everypay_script');
 
-                wp_register_script('everypay', plugins_url('js/everypay.js', __FILE__), array('jquery'), '1.1', true);
+                wp_register_script('everypay', plugins_url('js/everypay.js', __FILE__), array('jquery'), '1.12', true);
                 wp_enqueue_script('everypay');
             }
 
@@ -334,7 +334,7 @@ function everypay_init()
                                             <th>Eως (Ποσό σε &euro;)</th>
                                             <th>Μέγιστος Αρ. Δόσεων</th>
                                             <th>
-                                                <a class="button-primary" href="#" id="add-installment" style="width:101px;">                        
+                                                <a class="button-primary" href="#" id="add-installment" style="width:101px;">
                                                     <i class="icon icon-plus-sign"></i> <span class="ab-icon"></span>  Προσθήκη
                                                 </a>
                                             </th>
@@ -347,15 +347,15 @@ function everypay_init()
                             <style type="text/css">
                                 #everypay-max_installments-table table{border:none}
                                 .remove-installment{font-size: 2em; text-decoration: none !important;color:#ee5f5b}
-                                #installment-table table{width:600px;background: white;}                    
+                                #installment-table table{width:600px;background: white;}
                                 #everypay-max_installments-table table tr td,
-                                #everypay-max_installments-table table tr th{border:none;border-bottom:1px solid #f2f2f2}                    
+                                #everypay-max_installments-table table tr th{border:none;border-bottom:1px solid #f2f2f2}
                                 #everypay-max_installments-table{width:100%;max-width: 801px;background: #fff; padding:16px;}
                                 #everypay-max_installments-table table input[type="number"] {width: 99px;}
-                            </style>                            
+                            </style>
                         </td>
                     </tr>
-                </table>                
+                </table>
                 <?php
             }
 
@@ -494,7 +494,7 @@ function everypay_init()
 
             /**
              * The html displayed right after the radio button option
-             * 
+             *
              * @global type $woocommerce
              */
             public function payment_fields()
@@ -534,7 +534,7 @@ function everypay_init()
 
             /**
              * Give command to open the button
-             * 
+             *
              * @return string
              */
             public function show_button()
@@ -586,7 +586,7 @@ function everypay_init()
                     $wc_order = new WC_Order($order_id);
                     $grand_total = $wc_order->order_total;
                     $amount = $grand_total;
-                    
+
                     $amount = preg_replace("/[^0-9]/", '', number_format($amount, 2));
 
                     $description = get_bloginfo('name') . ' / '
@@ -603,7 +603,7 @@ function everypay_init()
                     );
 
                     // --------------- Enable for debug -------------
-                    /* $error = var_export($data, true);                        
+                    /* $error = var_export($data, true);
                       wc_add_notice($error, $notice_type = 'error');
                       WC()->session->reload_checkout = true;
                       return; */
@@ -620,6 +620,7 @@ function everypay_init()
                         }
 
                         wc_add_notice($error, $notice_type = 'error');
+
                         WC()->session->reload_checkout = true;
                     } else {
                         //wc_add_notice('Payment success!');
@@ -650,6 +651,7 @@ function everypay_init()
                     if (!empty($trimmed)) {
                         $error = $this->get_option('everypay_error_message');
                     }
+
                     wc_add_notice($error, $notice_type = 'error');
                     WC()->session->reload_checkout = true;
                 }
