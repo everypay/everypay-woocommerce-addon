@@ -3,7 +3,7 @@
  * Plugin Name: Everypay WooCommerce Addon
  * Plugin URI: https://wordpress.org/plugins/everypay-woocommerce-addon/
  * Description: This plugin adds a payment option in WooCommerce for customers to pay with their Credit Cards Via Everypay.
- * Version: 1.3.4
+ * Version: 1.3.5
  * Author: Everypay S.A.
  * Author URI: https://everypay.gr
  * License: GPL2
@@ -78,7 +78,7 @@ function everypay_init()
                 add_filter('woocommerce_payment_gateways', array($this, 'add_everypay_gateway_class'));
                 add_filter('query_vars', array($this, 'add_everypay_var'));
                 add_action('wp_enqueue_scripts', array($this, 'add_everypay_js'));
-                add_action('woocommerce_cart_calculate_fees', array($this, 'calculate_order_totals'));
+                //add_action('woocommerce_cart_calculate_fees', array($this, 'calculate_order_totals'));
 
                 add_action('admin_init', array($this, 'nag_everypay'));
                 add_action('admin_notices', array($this, 'show_everypay_notices'));
@@ -420,7 +420,7 @@ function everypay_init()
                         'desc_tip' => true,
                         'default' => 'no',
                     ),
-                    'everypay_fee_enabled' => array(
+                    /*'everypay_fee_enabled' => array(
                         'title' => __('Apply Extra fee', 'woocommerce'),
                         'type' => 'checkbox',
                         'label' => __('Enable', 'woocommerce'),
@@ -445,7 +445,7 @@ function everypay_init()
                         'description' => __("Fixed amount of the fee that is applied from the gateway (Everypay). <br />For eg. type 0.20&euro; etc. Leave 0 if no fixed amount fee is applied", 'woocommerce'),
                         'desc_tip' => __("Fixed amount of the fee that is applied from the gateway (Everypay). <br />For eg. type 0.20&euro; etc. Leave 0 if no fixed amount fee is applied", 'woocommerce'),
                         'default' => '0',
-                    ),
+                    ),*/
                     'everypay_error_message' => array(
                         'title' => __('Error message', 'woocommerce'),
                         'type' => 'textarea',
@@ -544,7 +544,7 @@ function everypay_init()
                 $total = $woocommerce->cart->total;
                 $EVDATA = array(
                     'description' => get_bloginfo('name') . ' ' . strip_tags(html_entity_decode(wc_price($total))),
-                    'amount' => preg_replace("/[^0-9]/", '', $total * 100),
+                    'amount' => $this->format_the_amount($total),
                     'locale' => 'el',
                     'sandbox' => (EVERYPAY_SANDBOX ? 1 : 0),
                     'callback' => "handleCallback",
@@ -560,6 +560,11 @@ function everypay_init()
                     . "load_everypay();</script></div>",
                 );
                 return json_encode($responsedata);
+            }
+
+            private function format_the_amount($amount)
+            {
+                return (int) preg_replace("/[^0-9]/", '', number_format($amount, 2) * 100);
             }
 
             /**
@@ -585,9 +590,7 @@ function everypay_init()
 
                     $wc_order = new WC_Order($order_id);
                     $grand_total = $wc_order->order_total;
-                    $amount = $grand_total;
-
-                    $amount = preg_replace("/[^0-9]/", '', number_format($amount, 2));
+                    $amount = $this->format_the_amount($grand_total);
 
                     $description = get_bloginfo('name') . ' / '
                         . __('Order') . ' #' . $wc_order->get_order_number() . ' - '
