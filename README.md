@@ -34,3 +34,7 @@ This plugin uses Everypay API version  **2015-04-07** to create tokens and charg
 8. Everypay & PCI compliance requires to use SSL always
 9. This plugin Support refunds **(Only in Cents)** in woocommerce interface. On full refund order state changes automatically to refunded(WooCommerce Feature).
 10. Upon refunds the items are not restocked automatically
+
+## Translation
+
+Due to incompatibility between latest version of woocommerce and polylang you can use https://el.wordpress.org/plugins/theme-translation-for-polylang/ in order to translate this plugin.

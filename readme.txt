@@ -1,12 +1,12 @@
 ==== Everypay Payment Gateway WooCommerce Addon ====
-Contributors: KostasKrv
+Contributors: KostasKrv, John Rallis
 Plugin Name: Everypay WooCommerce Addon
 Plugin URI: https://wordpress.org/plugins/everypay-woocommerce-addon/
 Tags: woocommerce, Everypay, woocommerce addon Everypay, Everypay for woocommerce,Everypay for wordpress,Everypay payment method,Everypay payment in wordpress,Everypay payment gateway for woocommerce,wordpress Everypay wocommmerce,woocommerce Everypay gateway download,Everypay plugin for woocommerce,Everypay woocommerce plugin,Everypay payment gateway for wordpress,Everypay payment gateway for woocommerce,woocommerce Everypay payment gateway,woocommerce credit cards payment with Everypay
 Author URI: https://nazrulhassan.wordpress.com/
 Author: KostasKrv
 Requires at least: 4.0  & WooCommerce 2.2+
-Tested up to: 4.2.2 & WooCommerce 2.3.11
+Tested up to: 4.7.3 & WooCommerce 3.0
 Stable tag: 1.0.2
 Version: 1.0.1
 License: http://www.gnu.org/licenses/gpl-2.0.html
@@ -44,3 +44,8 @@ This plugin uses Everypay API version  **2015-04-07** to create tokens and charg
 8. Everypay & PCI compliance requires to use SSL always
 9. This plugin Support refunds **(Only in Cents)** in woocommerce interface. On full refund order state changes automatically to refunded(WooCommerce Feature).
 10. Upon refunds the items are not restocked automatically
+
+== Translation ==
+
+Due to incompatibility between latest version of woocommerce and polylang you can use https://el.wordpress.org/plugins/theme-translation-for-polylang/ in order to translate this plugin.
+Do not update to WooCommerce >=2.7 if you want to translate for multilingual sites. The corresponding plugins should be updated soon.

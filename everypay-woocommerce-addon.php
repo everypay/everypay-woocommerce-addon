@@ -3,7 +3,7 @@
  * Plugin Name: Everypay WooCommerce Addon
  * Plugin URI: https://wordpress.org/plugins/everypay-woocommerce-addon/
  * Description: This plugin adds a payment option in WooCommerce for customers to pay with their Credit Cards Via Everypay.
- * Version: 1.3.6
+ * Version: 1.3.7
  * Author: Everypay S.A.
  * Author URI: https://everypay.gr
  * License: GPL2
@@ -48,14 +48,14 @@ function everypay_init()
                 $this->id = 'everypay';
                 $this->icon = apply_filters('woocommerce_everypay_icon', plugins_url('images/pay-via-everypay.png', __FILE__));
                 $this->has_fields = true;
-                $this->method_title = 'Everypay Cards Settings';
+                $this->method_title = pll__('Everypay Cards Settings');;
                 $this->init_form_fields();
                 $this->init_settings();
 
                 $this->supports = array('products', 'refunds');
                 $this->nag_name = 'everypay_nag_notice_' . date('W');
-                $this->title = $this->get_option('everypay_title');
-                $this->description = $this->get_option('description');
+                $this->title = pll__($this->get_option('everypay_title'));
+                $this->description = pll__($this->get_option('description'));;
                 $this->everypayPublicKey = $this->get_option('everypayPublicKey');
                 $this->everypaySecretKey = $this->get_option('everypaySecretKey');
                 $this->everypayMaxInstallments = $this->get_option('everypay_maximum_installments');
@@ -174,7 +174,7 @@ function everypay_init()
 
                 /* Check that the user hasn't already clicked to ignore the message */
                 $messages = '<p>' . $messages . '</p>' .
-                    sprintf(__('<a href="%1$s">OK. Hide This Notice</a>'), '?' . $nag_name . '=0');
+                    sprintf(pll__('<a href="%1$s">OK. Hide This Notice</a>'), '?' . $nag_name . '=0');
 
                 echo "<div class=\"update-nag\">$messages</div>";
             }
@@ -258,11 +258,10 @@ function everypay_init()
                 }
 
                 $total = $cart->cart_contents_total + $cart->shipping_total;
-
                 if (!$cart->prices_include_tax) {
                     if (count($cart->taxes)) {
                         foreach ($cart->taxes as $tax) {
-                            $total += $tax;
+                            $total +=  $tax;
                         }
                     }
                     if (count($cart->shipping_taxes)) {
@@ -272,7 +271,7 @@ function everypay_init()
                     }
                 }
 
-                $fee_name = 'Payment fee';
+                $fee_name = pll__('Payment fee');
                 $fee_id = 'payment-fee';
                 $fees = $cart->get_fees();
 
@@ -322,8 +321,8 @@ function everypay_init()
             {
 
                 ?>
-                <h3><?php _e('Everypay addon for Woocommerce', 'woocommerce'); ?></h3>
-                <p><?php _e('Everypay is a company that provides a way for individuals and businesses to accept payments over the Internet.', 'woocommerce'); ?></p>
+                <h3><?php pll_e('Everypay addon for Woocommerce'); ?></h3>
+                <p><?php pll_e('Everypay is a company that provides a way for individuals and businesses to accept payments over the Internet.'); ?></p>
                 <table class="form-table">
                     <?php $this->generate_settings_html(); ?>
                     <tr valign="top">
@@ -371,99 +370,99 @@ function everypay_init()
             {
                 $this->form_fields = array(
                     'enabled' => array(
-                        'title' => __('Enable/Disable', 'woocommerce'),
+                        'title' => pll__('Enable/Disable'),
                         'type' => 'checkbox',
-                        'label' => __('Enable Everypay', 'woocommerce'),
+                        'label' => pll__('Enable Everypay'),
                         'default' => 'yes'
                     ),
                     'everypay_title' => array(
-                        'title' => __('Title', 'woocommerce'),
+                        'title' => pll__('Title'),
                         'type' => 'text',
-                        'description' => __('This controls the title which the user sees during checkout.', 'woocommerce'),
-                        'default' => __('Pay with Card', 'woocommerce'),
+                        'description' => pll__('This controls the title which the user sees during checkout.'),
+                        'default' => pll__('Pay with Card'),
                         'desc_tip' => true,
                     ),
                     'description' => array(
-                        'title' => __('Description', 'woocommerce'),
+                        'title' => pll__('Description'),
                         'type' => 'textarea',
-                        'description' => __('Payment method description that the customer will see on your website. If there is an extra fee, you can display it by using the keyword %AMOUNT% in your text. For eg. There will be an extra charge of %AMOUNT%', 'woocommerce'),
-                        'default' => __('Pay using your credit or debit card.', 'woocommerce'),
-                        'desc_tip' => __('Payment method description that the customer will see on your website. If there is an extra fee, you can display it by using the keyword %AMOUNT% in your text. For eg. There will be an extra charge of %AMOUNT%'),
+                        'description' => pll__('Payment method description that the customer will see on your website. If there is an extra fee, you can display it by using the keyword %AMOUNT% in your text. For eg. There will be an extra charge of %AMOUNT%'),
+                        'default' => pll__('Pay using your credit or debit card.'),
+                        'desc_tip' => pll__('Payment method description that the customer will see on your website. If there is an extra fee, you can display it by using the keyword %AMOUNT% in your text. For eg. There will be an extra charge of %AMOUNT%'),
                     ),
                     'everypayPublicKey' => array(
-                        'title' => __('Public Key', 'woocommerce'),
+                        'title' => pll__('Public Key'),
                         'type' => 'text',
-                        'description' => __('This is the Public Key found in API Keys in Account Dashboard.', 'woocommerce'),
+                        'description' => pll__('This is the Public Key found in API Keys in Account Dashboard.'),
                         'default' => '',
                         'desc_tip' => true,
                         'placeholder' => 'Everypay Public Key'
                     ),
                     'everypaySecretKey' => array(
-                        'title' => __('Secret Key', 'woocommerce'),
+                        'title' => pll__('Secret Key'),
                         'type' => 'text',
-                        'description' => __('This is the Secret Key found in API Keys in Account Dashboard.', 'woocommerce'),
+                        'description' => pll__('This is the Secret Key found in API Keys in Account Dashboard.'),
                         'default' => '',
                         'desc_tip' => true,
                         'placeholder' => 'Everypay Secret Key'
                     ),
                     /* 'everypay_storecurrency' => array(
-                      'title' => __('Fund Receiving Currency'),
+                      'title' => ppl__('Fund Receiving Currency'),
                       'type' => 'select',
                       'class' => 'select',
                       'css' => 'width: 350px;',
-                      'desc_tip' => __('Select the currency in which you like to receive payment the currency that has (*) is unsupported on  American Express Cards.This is independent of store base currency so please update your cart price accordingly.', 'woocommerce'),
+                      'desc_tip' => ppl__('Select the currency in which you like to receive payment the currency that has (*) is unsupported on  American Express Cards.This is independent of store base currency so please update your cart price accordingly.'),
                       'options' => array('EUR' => 'Euro'),
                       'description' => "<span style='color:red;'>Select the currency in which you like to receive payment the currency that has (*) is unsupported on  American Express Cards.This is independent of store base currency so please update your cart price accordingly.</span>",
                       'default' => 'EUR',
                       ), */
                     'everypay_sandbox' => array(
-                        'title' => __('Everypay Sandbox', 'woocommerce'),
+                        'title' => pll__('Everypay Sandbox'),
                         'type' => 'checkbox',
-                        'label' => __('Sandbox mode (test)? ', 'woocommerce'),
-                        'description' => __('If checked its in sanbox mode and if unchecked its in live mode', 'woocommerce'),
+                        'label' => pll__('Sandbox mode (test)? '),
+                        'description' => pll__('If checked its in sanbox mode and if unchecked its in live mode'),
                         'desc_tip' => true,
                         'default' => 'no',
                     ),
                     /*'everypay_fee_enabled' => array(
-                        'title' => __('Apply Extra fee', 'woocommerce'),
+                        'title' => ppl__('Apply Extra fee'),
                         'type' => 'checkbox',
-                        'label' => __('Enable', 'woocommerce'),
-                        'description' => __('Allows the fee to be paid by the customer', 'woocommerce'),
+                        'label' => ppl__('Enable'),
+                        'description' => ppl__('Allows the fee to be paid by the customer'),
                         'desc_tip' => true,
                         'default' => 'no',
                     ),
                     'everypay_fee_percent' => array(
-                        'title' => __('Fee Percentage (%)', 'woocommerce'),
+                        'title' => ppl__('Fee Percentage (%)'),
                         'type' => 'number',
                         'class' => 'everypay-fee-percentage',
-                        'label' => __('Fee Percentage', 'woocommerce'),
-                        'description' => __('Percentage of the fee that is applied from the gateway (Everypay). <br />Type 2.4 if your percentage is 2,4%. Leave 0 if no percentage fee is applied', 'woocommerce'),
-                        'desc_tip' => __("Percentage of the fee that is applied from the gateway (Everypay). <br />Type 2.4 if your percentage is 2,4%. Leave 0 if no percentage fee is applied", 'woocommerce'),
+                        'label' => ppl__('Fee Percentage'),
+                        'description' => ppl__('Percentage of the fee that is applied from the gateway (Everypay). <br />Type 2.4 if your percentage is 2,4%. Leave 0 if no percentage fee is applied'),
+                        'desc_tip' => ppl__("Percentage of the fee that is applied from the gateway (Everypay). <br />Type 2.4 if your percentage is 2,4%. Leave 0 if no percentage fee is applied"),
                         'default' => '0',
                     ),
                     'everypay_fee_amount' => array(
-                        'title' => __('Fee Amount (&euro;)', 'woocommerce'),
+                        'title' => ppl__('Fee Amount (&euro;)'),
                         'type' => 'number',
                         'class' => 'everypay-fee-fixed',
-                        'label' => __('Fee fixed amount', 'woocommerce'),
-                        'description' => __("Fixed amount of the fee that is applied from the gateway (Everypay). <br />For eg. type 0.20&euro; etc. Leave 0 if no fixed amount fee is applied", 'woocommerce'),
-                        'desc_tip' => __("Fixed amount of the fee that is applied from the gateway (Everypay). <br />For eg. type 0.20&euro; etc. Leave 0 if no fixed amount fee is applied", 'woocommerce'),
+                        'label' => ppl__('Fee fixed amount'),
+                        'description' => ppl__("Fixed amount of the fee that is applied from the gateway (Everypay). <br />For eg. type 0.20&euro; etc. Leave 0 if no fixed amount fee is applied"),
+                        'desc_tip' => ppl__("Fixed amount of the fee that is applied from the gateway (Everypay). <br />For eg. type 0.20&euro; etc. Leave 0 if no fixed amount fee is applied"),
                         'default' => '0',
                     ),*/
                     'everypay_error_message' => array(
-                        'title' => __('Error message', 'woocommerce'),
+                        'title' => pll__('Error message'),
                         'type' => 'textarea',
-                        'label' => __('Error message', 'woocommerce'),
-                        'description' => __('Please type a universal error message to display to the customer. Leave empty to show the default error.', 'woocommerce'),
-                        'desc_tip' => __('Please type a universal error message to display to the customer. Leave empty to show the default error.', 'woocommerce'),
+                        'label' => pll__('Error message'),
+                        'description' => pll__('Please type a universal error message to display to the customer. Leave empty to show the default error.'),
+                        'desc_tip' => pll__('Please type a universal error message to display to the customer. Leave empty to show the default error.'),
                         'default' => '',
                     ),
                     'everypay_maximum_installments' => array(
-                        'title' => __('Everypay Max Installments', 'woocommerce'),
+                        'title' => pll__('Everypay Max Installments'),
                         'type' => 'hidden',
-                        'label' => __('Installments', 'woocommerce'),
-                        'description' => __('Configure the amount of installments offered depending on the amount of the order. Leave emprt if no installments are offered at all', 'woocommerce'),
-                        'desc_tip' => __('Choose the maximum number for installments offered', 'woocommerce'),
+                        'label' => pll__('Installments'),
+                        'description' => pll__('Configure the amount of installments offered depending on the amount of the order. Leave emprt if no installments are offered at all'),
+                        'desc_tip' => pll__('Choose the maximum number for installments offered'),
                         'default' => '',
                     ),
                 );
@@ -474,24 +473,12 @@ function everypay_init()
                 $inst = htmlspecialchars_decode($ins);
                 if ($inst) {
                     $installments = json_decode($inst, true);
-                    $counter = 1;
-                    $max = 0;
                     $max_installments = 0;
                     foreach ($installments as $i) {
-                        if ($i['to'] > $max) {
-                            $max = $i['to'];
-                            $max_installments = $i['max'];
-                        }
-
-                        if (($counter == (count($installments)) && $total >= $max)) {
-                            return $max_installments;
-                        }
-
-                        if ($total >= $i['from'] && $total <= $i['to']) {
-                            return $i['max'];
-                        }
-                        $counter++;
+                    	if($total >= $this->format_the_amount($i['from']) && $total <= $this->format_the_amount($i['to']) && intval($i['max']) > $max_installments)
+                    		$max_installments = intval($i['max']);
                     }
+                    return $max_installments;
                 }
                 return 0;
             }
@@ -516,7 +503,7 @@ function everypay_init()
                     }
 
                     ?>
-                    <p><?php echo str_replace('%AMOUNT%', $amount, $this->description); ?></p>
+                    <p><?php echo str_replace('%AMOUNT%', $amount, pll__($this->description)); ?></p>
                 <?php endif; ?>
                 <style type="text/css">
                     .payment_method_everypay .button-holder{display:none}
@@ -544,17 +531,26 @@ function everypay_init()
             public function show_button()
             {
                 global $woocommerce;
-
                 $total = $woocommerce->cart->total;
+                // fix decimals for new woocommerce
+                if(gettype($total) != "string"){
+					if (round($total, 0) == $total){
+						$total = $total * 100;
+					}
+                } else {
+                	$total = $this->format_the_amount($total);
+                }
                 $EVDATA = array(
-                    'description' => get_bloginfo('name') . ' ' . strip_tags(html_entity_decode(wc_price($total))),
-                    'amount' => $this->format_the_amount($total),
-                    'locale' => 'el',
+                    'description' => get_bloginfo('name') . ' ' . strip_tags(html_entity_decode(wc_price($total / 100))),
+                    'amount' => $total,
                     'sandbox' => (EVERYPAY_SANDBOX ? 1 : 0),
                     'callback' => "handleCallback",
                     'key' => $this->everypayPublicKey,
                     'max_installments' => $this->everypay_get_installments($total, $this->everypayMaxInstallments),
                 );
+				// use english if the language is not greek (default)
+				if(substr(get_locale(), 0, 2) != "el")
+					$EVDATA['locale'] = "en";
 
                 $responsedata = array(
                     'result' => 'failure',
@@ -568,7 +564,12 @@ function everypay_init()
 
             private function format_the_amount($amount)
             {
-                return (int) preg_replace("/[^0-9]/", '', number_format($amount, 2) * 100);
+            	$tmp = intval(preg_replace("/[^0-9]/", '', (string) $amount));
+            	// check if number had no decimals
+            	if($tmp == intval($amount)){
+            		return $tmp * 100;
+            	}
+            	return $tmp;
             }
 
             /**
@@ -597,7 +598,7 @@ function everypay_init()
                     $amount = $this->format_the_amount($grand_total);
 
                     $description = get_bloginfo('name') . ' / '
-                        . __('Order') . ' #' . $wc_order->get_order_number() . ' - '
+                        . pll__('Order') . ' #' . $wc_order->get_order_number() . ' - '
                         . number_format($amount/100, 2, ',', '.') . '€';
 
                     $data = array(
@@ -636,8 +637,8 @@ function everypay_init()
                         $timestamp = $dt->format('Y-m-d H:i:s e');
                         $token = $response['body']['token'];
 
-                        $wc_order->add_order_note(__('Everypay payment completed at-' .
-                                $timestamp . '-with Token ID=' . $token, 'woocommerce'));
+                        $wc_order->add_order_note(pll__('Everypay payment completed at-' .
+                                $timestamp . '-with Token ID=' . $token));
 
                         $wc_order->payment_complete($token);
                         $wc_order->get_order();
@@ -697,8 +698,8 @@ function everypay_init()
                         $refToken = $refund['body']['token'];
 
                         $wc_order = new WC_Order($order_id);
-                        $wc_order->add_order_note(__('Everypay Refund completed at-' .
-                                $timestamp . '-with Refund Token=' . $refToken, 'woocommerce'));
+                        $wc_order->add_order_note(pll__('Everypay Refund completed at-' .
+                                $timestamp . '-with Refund Token=' . $refToken));
 
                         return true;
                     } else {
@@ -714,4 +715,16 @@ function everypay_init()
 
     new WC_Everypay_Gateway();
 }
+
+include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+
+if(!is_plugin_active( 'theme-translation-for-polylang/polylang-theme-translation.php' ) ) {
+	function ppl__($string){
+		return __($string, 'woocommerce');
+	}
+	function ppl_e($string){
+		echo __($string, 'woocommerce');
+	}
+}
+
 add_action('plugins_loaded', 'everypay_init');
