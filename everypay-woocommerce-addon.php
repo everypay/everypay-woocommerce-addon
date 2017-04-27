@@ -406,11 +406,11 @@ function everypay_init()
                         'placeholder' => 'Everypay Secret Key'
                     ),
                     /* 'everypay_storecurrency' => array(
-                      'title' => ppl__('Fund Receiving Currency'),
+                      'title' => pll__('Fund Receiving Currency'),
                       'type' => 'select',
                       'class' => 'select',
                       'css' => 'width: 350px;',
-                      'desc_tip' => ppl__('Select the currency in which you like to receive payment the currency that has (*) is unsupported on  American Express Cards.This is independent of store base currency so please update your cart price accordingly.'),
+                      'desc_tip' => pll__('Select the currency in which you like to receive payment the currency that has (*) is unsupported on  American Express Cards.This is independent of store base currency so please update your cart price accordingly.'),
                       'options' => array('EUR' => 'Euro'),
                       'description' => "<span style='color:red;'>Select the currency in which you like to receive payment the currency that has (*) is unsupported on  American Express Cards.This is independent of store base currency so please update your cart price accordingly.</span>",
                       'default' => 'EUR',
@@ -424,29 +424,29 @@ function everypay_init()
                         'default' => 'no',
                     ),
                     /*'everypay_fee_enabled' => array(
-                        'title' => ppl__('Apply Extra fee'),
+                        'title' => pll__('Apply Extra fee'),
                         'type' => 'checkbox',
-                        'label' => ppl__('Enable'),
-                        'description' => ppl__('Allows the fee to be paid by the customer'),
+                        'label' => pll__('Enable'),
+                        'description' => pll__('Allows the fee to be paid by the customer'),
                         'desc_tip' => true,
                         'default' => 'no',
                     ),
                     'everypay_fee_percent' => array(
-                        'title' => ppl__('Fee Percentage (%)'),
+                        'title' => pll__('Fee Percentage (%)'),
                         'type' => 'number',
                         'class' => 'everypay-fee-percentage',
-                        'label' => ppl__('Fee Percentage'),
-                        'description' => ppl__('Percentage of the fee that is applied from the gateway (Everypay). <br />Type 2.4 if your percentage is 2,4%. Leave 0 if no percentage fee is applied'),
-                        'desc_tip' => ppl__("Percentage of the fee that is applied from the gateway (Everypay). <br />Type 2.4 if your percentage is 2,4%. Leave 0 if no percentage fee is applied"),
+                        'label' => pll__('Fee Percentage'),
+                        'description' => pll__('Percentage of the fee that is applied from the gateway (Everypay). <br />Type 2.4 if your percentage is 2,4%. Leave 0 if no percentage fee is applied'),
+                        'desc_tip' => pll__("Percentage of the fee that is applied from the gateway (Everypay). <br />Type 2.4 if your percentage is 2,4%. Leave 0 if no percentage fee is applied"),
                         'default' => '0',
                     ),
                     'everypay_fee_amount' => array(
-                        'title' => ppl__('Fee Amount (&euro;)'),
+                        'title' => pll__('Fee Amount (&euro;)'),
                         'type' => 'number',
                         'class' => 'everypay-fee-fixed',
-                        'label' => ppl__('Fee fixed amount'),
-                        'description' => ppl__("Fixed amount of the fee that is applied from the gateway (Everypay). <br />For eg. type 0.20&euro; etc. Leave 0 if no fixed amount fee is applied"),
-                        'desc_tip' => ppl__("Fixed amount of the fee that is applied from the gateway (Everypay). <br />For eg. type 0.20&euro; etc. Leave 0 if no fixed amount fee is applied"),
+                        'label' => pll__('Fee fixed amount'),
+                        'description' => pll__("Fixed amount of the fee that is applied from the gateway (Everypay). <br />For eg. type 0.20&euro; etc. Leave 0 if no fixed amount fee is applied"),
+                        'desc_tip' => pll__("Fixed amount of the fee that is applied from the gateway (Everypay). <br />For eg. type 0.20&euro; etc. Leave 0 if no fixed amount fee is applied"),
                         'default' => '0',
                     ),*/
                     'everypay_error_message' => array(
@@ -719,10 +719,10 @@ function everypay_init()
 include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 
 if(!is_plugin_active( 'theme-translation-for-polylang/polylang-theme-translation.php' ) ) {
-	function ppl__($string){
+	function pll__($string){
 		return __($string, 'woocommerce');
 	}
-	function ppl_e($string){
+	function pll_e($string){
 		echo __($string, 'woocommerce');
 	}
 }
