@@ -607,7 +607,7 @@ function everypay_init()
                         'payee_email' => $wc_order->billing_email,
                         'payee_phone' => $wc_order->billing_phone,
                         'token' => $token,
-                        'max_installments' => $this->everypay_get_installments($amount / 100, $this->everypayMaxInstallments),
+                        'max_installments' => $this->everypay_get_installments($amount, $this->everypayMaxInstallments),
                     );
 
                     // --------------- Enable for debug -------------
