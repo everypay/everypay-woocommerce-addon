@@ -718,7 +718,7 @@ function everypay_init()
 
 include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 
-if(!is_plugin_active( 'theme-translation-for-polylang/polylang-theme-translation.php' ) ) {
+ if(!is_plugin_active( 'theme-translation-for-polylang/polylang-theme-translation.php') && !is_plugin_active( 'polylang/polylang.php') ) {
 	function pll__($string){
 		return __($string, 'woocommerce');
 	}
