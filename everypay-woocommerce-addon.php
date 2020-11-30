@@ -46,7 +46,7 @@ function everypay_init()
             public function __construct()
             {
                 $this->id = 'everypay';
-                $this->icon = apply_filters('woocommerce_everypay_icon', plugins_url('images/pay-via-everypay.png', __FILE__));
+                $this->icon = apply_filters('woocommerce_everypay_icon', plugins_url('images/everypay.png', __FILE__));
                 $this->has_fields = true;
                 $this->method_title = pll__('Everypay Cards Settings');;
                 $this->init_form_fields();
@@ -59,7 +59,6 @@ function everypay_init()
                 $this->everypayPublicKey = $this->get_option('everypayPublicKey');
                 $this->everypaySecretKey = $this->get_option('everypaySecretKey');
                 $this->everypayMaxInstallments = $this->get_option('everypay_maximum_installments');
-                //$this->everypay_storecurrency = $this->get_option('everypay_storecurrency');
                 $this->everypay_sandbox = $this->get_option('everypay_sandbox');
                 $this->errors = array();
 
@@ -78,7 +77,7 @@ function everypay_init()
                 add_filter('woocommerce_payment_gateways', array($this, 'add_everypay_gateway_class'));
                 add_filter('query_vars', array($this, 'add_everypay_var'));
                 add_action('wp_enqueue_scripts', array($this, 'add_everypay_js'));
-                //add_action('woocommerce_cart_calculate_fees', array($this, 'calculate_order_totals'));
+
 
                 add_action('admin_init', array($this, 'nag_everypay'));
                 add_action('admin_notices', array($this, 'show_everypay_notices'));
@@ -208,8 +207,15 @@ function everypay_init()
                     return;
                 }
 
-                wp_register_script('everypay_script', "https://button.everypay.gr/js/button.js");
+                if (EVERYPAY_SANDBOX)
+                     wp_register_script('everypay_script', "https://sandbox-js.everypay.gr/v3");
+                else
+                    wp_register_script('everypay_script', "https://js.everypay.gr/v3");
+
                 wp_enqueue_script('everypay_script');
+
+                wp_register_script('everypay_modal', plugins_url('js/everypay_modal.js', __FILE__), array('jquery'), '1.12', true);
+                wp_enqueue_script('everypay_modal');
 
                 wp_register_script('everypay', plugins_url('js/everypay.js', __FILE__), array('jquery'), '1.12', true);
                 wp_enqueue_script('everypay');
@@ -291,10 +297,6 @@ function everypay_init()
                 if ($this->get_option('everypay_fee_enabled') !== 'yes') {
                     return;
                 }
-
-                /* if ($already_exists) {
-                  return;
-                  } */
 
                 $fee = floatval($this->get_option('everypay_fee_percent'));
                 $c = floatval($this->get_option('everypay_fee_amount'));
@@ -524,14 +526,17 @@ function everypay_init()
             }
 
             /**
-             * Give command to open the button
+             * Open every iframe
              *
              * @return string
              */
-            public function show_button()
+            public function show_everypay_iframe()
             {
-                global $woocommerce;
+                global $woocommerce, $current_user;
+
                 $total = $woocommerce->cart->total;
+                $address_1 = get_user_meta( $current_user->ID, 'billing_address_1', true );
+
                 // fix decimals for new woocommerce
                 if(gettype($total) != "string"){
 					if (round($total, 0) == $total){
@@ -540,35 +545,42 @@ function everypay_init()
                 } else {
                 	$total = $this->format_the_amount($total);
                 }
+
                 $EVDATA = array(
                     'description' => get_bloginfo('name') . ' ' . strip_tags(html_entity_decode(wc_price($total / 100))),
                     'amount' => $total,
                     'sandbox' => (EVERYPAY_SANDBOX ? 1 : 0),
-                    'callback' => "handleCallback",
-                    'key' => $this->everypayPublicKey,
+                    'pk' => $this->everypayPublicKey,
                     'max_installments' => $this->everypay_get_installments($total, $this->everypayMaxInstallments),
+                    'billing_address' => $address_1
                 );
+
 				// use english if the language is not greek (default)
 				if(substr(get_locale(), 0, 2) != "el")
 					$EVDATA['locale'] = "en";
 
-                $responsedata = array(
+                $response_data = array(
                     'result' => 'failure',
                     'refresh' => 'false',
                     'messages' => "<div ><script type=\"text/javascript\">"
-                    . "EVERYPAY_OPC_BUTTON = " . json_encode($EVDATA) . ";"
+                    . "EVDATA = " . json_encode($EVDATA) . ";"
                     . "load_everypay();</script></div>",
                 );
-                return json_encode($responsedata);
+
+
+                return json_encode($response_data);
             }
+
 
             private function format_the_amount($amount)
             {
             	$tmp = intval(preg_replace("/[^0-9]/", '', (string) $amount));
+
             	// check if number had no decimals
             	if($tmp == intval($amount)){
             		return $tmp * 100;
             	}
+
             	return $tmp;
             }
 
@@ -583,13 +595,14 @@ function everypay_init()
             {
                 //give command to open the modal box
                 $token = isset($_POST['everypayToken']) ? $_POST['everypayToken'] : 0;
+
                 if (!$token) {
-                    echo $this->show_button();
+                    echo $this->show_everypay_iframe();
                     exit;
                 }
 
                 //continue to payment
-                global $error, $current_user, $woocommerce;
+                global $error, $woocommerce;
 
                 try {
 
