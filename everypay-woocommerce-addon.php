@@ -9,22 +9,23 @@
  * License: GPL2
  */
 if (!defined('ABSPATH'))
-    exit; // Exit if accessed directly
+    exit;
+
+function everypay_woocommerce_missing_notice() {
+    echo '<div class="error"><p><strong>' . sprintf( esc_html__( 'Everypay requires WooCommerce to be installed and active. You can download %s here.'), '<a href="https://woocommerce.com/" target="_blank">WooCommerce</a>' ) . '</strong><p/></div>';
+}
 
 function everypay_init()
 {
-    global $woocommerce;
-    if (!isset($woocommerce)) {
+
+    if ( ! class_exists( 'WooCommerce' ) || ! class_exists('WC_Payment_Gateway')) {
+        add_action( 'admin_notices', 'everypay_woocommerce_missing_notice' );
         return;
     }
 
     if (!class_exists('Everypay')) {
         include(plugin_dir_path(__FILE__) . "lib/Everypay.php");
     }
-
-
-
-    if (class_exists('WC_Payment_Gateway')) {
 
         class WC_Everypay_Gateway extends WC_Payment_Gateway
         {
@@ -723,8 +724,6 @@ function everypay_init()
                 }
             }
         }
-
-    }
 
     new WC_Everypay_Gateway();
 }
