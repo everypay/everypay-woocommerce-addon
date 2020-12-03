@@ -35,7 +35,6 @@ function everypay_init()
         public function __construct() {
 
             $this->init();
-
             add_filter('woocommerce_payment_gateways', array($this, 'add_everypay_gateway'));
         }
 
@@ -53,8 +52,10 @@ function everypay_init()
             define('EVERYPAY_IMAGES_URL', plugins_url('images/', __FILE__));
             define('EVERYPAY_JS_URL', plugins_url('js/', __FILE__));
 
+            require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-global-checks.php";
             require_once plugin_dir_path(__FILE__) . "lib/Everypay.php";
             require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-everypay-gateway.php';
+
         }
 
 
