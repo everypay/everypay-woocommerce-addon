@@ -50,7 +50,8 @@ function everypay_init()
 
         public function init() {
             define('EVERYPAY_IMAGES_URL', plugins_url('images/', __FILE__));
-            define('EVERYPAY_JS_URL', plugins_url('js/', __FILE__));
+            define('EVERYPAY_JS_URL', plugins_url('assets/js/', __FILE__));
+            define('EVERYPAY_CSS_URL', plugins_url('assets/css/', __FILE__));
 
             require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-global-checks.php";
             require_once plugin_dir_path(__FILE__) . "lib/Everypay.php";

@@ -1,5 +1,14 @@
 var EVDATA;
 
+function addCssToDocument(css){
+    var style = document.createElement('style')
+    style.innerText = css
+    document.head.appendChild(style)
+}
+
+addCssToDocument('.payment_method_everypay img {width: 3px;}')
+document.querySelector('.payment_method_everypay img').style.maxWidth = '5px';
+document.querySelector('.payment_method_everypay img').style.height = '5px';
 
 var calculate_installments = function (max_installments) {
     var installments = [];
