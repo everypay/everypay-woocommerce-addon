@@ -19,7 +19,7 @@ This plugin uses Everypay API version  **2015-04-07** to create tokens and charg
 2. Activate 'everypay Woocommerce Addon' from wp plugin lists in admin area
 3. Plugin will appear in settings of woocommerce
 4. You can set the addon settings from  wocommmerce -> settings -> Checkout -> Everypay Cards Settings
-5. You can check for Testing Card No <a href="https://everypay.gr/docs" target="_blank" >Here</a> 
+5. You can check for Testing Card No <a href="https://docs.everypay.gr/tools/test-cases/" target="_blank" >Here</a> 
 6. Integrated Everypay Libraries
 
 ## Frequently Asked Questions
@@ -27,7 +27,7 @@ This plugin uses Everypay API version  **2015-04-07** to create tokens and charg
 1. You need to have woocoommerce plugin installed to make this plugin work
 2. You need to obtain API keys from Everypay <a href="https://dashboard.everypay.gr/">Dashboard</a>
 3. This plugin works on test & live api keys.
-4. This plugin requires SSL as per <a href="https://everypay.com/docs/ssl">here</a> but can work even without SSL.
+4. This plugin requires SSL for production mode, but can work without SSL for the sandbox environment.
 5. This plugin does not store Card Details anywhere.
 6. This plugin comes packed with Official Everypay Libraries
 7. This plugin requires CURL
