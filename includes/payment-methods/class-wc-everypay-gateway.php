@@ -168,6 +168,9 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
         wp_register_style( 'everypay_styles', EVERYPAY_CSS_URL.'everypay_styles.css' );
         wp_enqueue_style( 'everypay_styles' );
 
+        wp_register_style( 'everypay_modal', EVERYPAY_CSS_URL.'everypay_modal.css' );
+        wp_enqueue_style( 'everypay_modal' );
+
         if (EVERYPAY_SANDBOX)
             wp_register_script('everypay_script', "https://sandbox-js.everypay.gr/v3");
         else

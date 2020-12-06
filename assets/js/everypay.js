@@ -1,15 +1,5 @@
 var EVDATA;
 
-function addCssToDocument(css){
-    var style = document.createElement('style')
-    style.innerText = css
-    document.head.appendChild(style)
-}
-
-addCssToDocument('.payment_method_everypay img {width: 3px;}')
-document.querySelector('.payment_method_everypay img').style.maxWidth = '5px';
-document.querySelector('.payment_method_everypay img').style.height = '5px';
-
 var calculate_installments = function (max_installments) {
     var installments = [];
     var y = 2;
@@ -22,10 +12,9 @@ var calculate_installments = function (max_installments) {
     return installments;
 }
 
+let modal = new EverypayModal();
 
 function load_everypay() {
-
-    payFormElement =  document.getElementById('pay-form');
 
     var payload = {
         pk: EVDATA.pk,
@@ -52,14 +41,10 @@ function load_everypay() {
         }
 
         if (api.onLoad == true) {
-            closeEverypayLoadingScreen();
-            document.querySelector('.tingle-modal ').style.visibility = "visible";
-            document.getElementById('pay-form').style.visibility = "visible";
+            modal.open()
         }
-
     }
     everypay.payform(payload, handleResponse);
-    window.everypay_modal.open();
 }
 
 
@@ -67,9 +52,9 @@ handleCallback = function (message) {
     var checkout_form = jQuery('form[name="checkout"]');
 
     checkout_form.append('<input type="hidden" value="' + message.token + '" name="everypayToken">');
-    enableEverypayLoadingScreen();
 
     try{
+        modal.destroy();
         checkout_form.submit();
     } catch(err){
         checkout_form.find('#place_order').trigger('click');
@@ -80,5 +65,3 @@ handleCallback = function (message) {
     "use strict";
     $('body').on('change', 'input[name="payment_method"]', function() { $('body').trigger('update_checkout'); });
 })(jQuery);
-
-
