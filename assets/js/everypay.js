@@ -15,6 +15,7 @@ var calculate_installments = function (max_installments) {
 let modal = new EverypayModal();
 
 function load_everypay() {
+    enableEverypayLoadingScreen();
 
     var payload = {
         pk: EVDATA.pk,
@@ -41,6 +42,7 @@ function load_everypay() {
         }
 
         if (api.onLoad == true) {
+            closeEverypayLoadingScreen();
             modal.open()
         }
     }
