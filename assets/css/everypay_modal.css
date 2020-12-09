@@ -1,4 +1,3 @@
-
 #everypay-modal {
     position: fixed;
     display: none;
@@ -24,24 +23,21 @@
     border: 1px solid #888;
     min-width: 35vw;
     max-width: 35vw;
-    min-height: 25rem;
+    min-height: 43vh;
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
     -webkit-animation-name: everypayModalAnimation;
     -webkit-animation-duration: 0.4s;
     animation-name: everypayModalAnimation;
     animation-duration: 0.4s;
     margin-top: 1vw;
+    border-radius: 5px;
 }
-
-
 @-webkit-keyframes everypayModalAnimation {
     from {top:-300px; opacity:0} to {top:10vw; opacity:1}
 }
-
 @keyframes everypayModalAnimation {
     from {top:-300px; opacity:0} to {top:10vw; opacity:1}
 }
-
 #everypay-modal-header {
     display: flex;
     justify-content: flex-end;
@@ -72,7 +68,6 @@
     min-width: 100%;
     min-height: 100%;
 }
-
 #everypay-logo {
     display: flex;
     min-width: 35vw;
@@ -85,8 +80,8 @@
 }
 
 #everypay-logo  svg {
-    margin-left: 1vw;
-    height: 1.6rem;
+    margin-left: 1.2vw;
+    height: 3vh;
 }
 
 #everypay-secure-logos {
@@ -106,7 +101,7 @@
 
     #everypay-modal-content {
         min-width: 100vw;
-        min-height: 25rem;
+        min-height: 50vh;
     }
 
     #everypay-modal-header span {
@@ -116,6 +111,8 @@
     }
 
     #everypay-logo {
+        margin-top: 5vh;
+        margin-bottom: 2vh;
         flex-direction: row;
     }
 
@@ -128,11 +125,10 @@
 /* large screens */
 @media screen and (min-width: 1900px) {
     #everypay-modal-content {
-        min-width: 30vw;
-        max-width: 30vw;
+        min-width: 24vw;
+        max-width: 24vw;
     }
 }
-
 
 /* landscape mobiles */
 @media only screen and (max-width: 767px) and (orientation: landscape) {
@@ -151,11 +147,11 @@
 }
 
 /* Tablets */
-@media only screen and (min-device-width : 768px) and (max-device-width : 1024px) {
+@media only screen and (min-device-width : 768px) and (max-device-width : 1366px) {
     #everypay-modal-content {
         min-width: 60vw;
         max-width: 60vw;
-        min-height: 25rem;
+        height: 25vh;
     }
 
     #everypay-secure-logos {
