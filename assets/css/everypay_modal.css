@@ -53,7 +53,6 @@
     min-height: 100%;
     min-width: 2vw;
     max-width: 2vw;
-    margin-right: 1vw;
     color: gray;
 }
 #everypay-modal-header span:hover, #everypay-modal-header span:focus {
@@ -173,6 +172,10 @@
         min-width: 60vw;
         max-width: 60vw;
         height: 25vh;
+    }
+
+    #everypay-modal-header span {
+        margin-right: 1vw;
     }
 
     #everypay-logo {
