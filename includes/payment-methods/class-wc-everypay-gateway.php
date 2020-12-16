@@ -49,7 +49,7 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
         }
 
         // The hooks
-        add_filter('woocommerce_available_payment_gateways', array($this, 'everypay_payment_gateway_disable'));
+        add_filter('woocommerce_available_payment_gateways', array($this, 'disable_everypay_if_keys_not_set'));
         add_filter('query_vars', array($this, 'add_everypay_var'));
         add_action('wp_enqueue_scripts', array($this, 'add_everypay_js'));
 
@@ -62,11 +62,11 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
     }
 
     /**
-     *  Remove payment gateway if we have global everypay errors
+     *  Remove payment gateway if keys are not set
      */
-    public function everypay_payment_gateway_disable($available_gateways)
+    public function disable_everypay_if_keys_not_set($available_gateways)
     {
-        if (isset($available_gateways['everypay']) && defined('EVERYPAY_GLOBAL_ERRORS') && !empty(EVERYPAY_GLOBAL_ERRORS))
+        if (isset($available_gateways['everypay']) && empty($this->everypaySecretKey) || empty($this->everypayPublicKey))
             unset($available_gateways['everypay']);
 
         return $available_gateways;
