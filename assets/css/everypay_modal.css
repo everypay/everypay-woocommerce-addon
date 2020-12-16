@@ -121,7 +121,6 @@
         height: 10vh;
     }
 
-
     #everypay-secure-logos {
         height: 5vh;
         min-width: 90vw;
@@ -204,5 +203,38 @@
         min-width: 45vw;
         max-width: 45vw;
         margin-bottom: 2vh;
+    }
+}
+/* ipad pro */
+@media only screen and (min-width: 1024px) and (max-height: 1366px) and (-webkit-min-device-pixel-ratio: 1.5) {
+    #everypay-modal-content {
+        min-width: 40vw;
+        max-width: 40vw;
+        min-height: 25vh;
+        height: 25vh;
+        margin-bottom: 5vw;
+    }
+    #everypay-logo {
+        font-size: 1.2em;
+        flex-direction: row;
+    }
+    #everypay-logo svg {
+        height: 2vh;
+    }
+}
+/* laptop mdpi/hidpi */
+@media only screen and (min-device-width : 1250px) and (max-device-width : 1440px) {
+    #everypay-modal-content {
+        min-width: 30vw;
+        max-width: 30vw;
+        min-height: 40vh;
+        height: 40vh;
+        margin-bottom: 1vw;
+    }
+    #everypay-logo {
+        flex-direction: row;
+    }
+    #everypay-logo svg {
+        height: 3vh;
     }
 }
