@@ -521,16 +521,14 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
      */
     public function process_payment($order_id)
     {
-        //give command to open the modal box
-        $token = isset($_POST['everypayToken']) ? $_POST['everypayToken'] : 0;
+        $token = isset($_POST['everypayToken']) ? esc_html($_POST['everypayToken']) : 0;
 
         if (!$token) {
             echo $this->show_everypay_iframe();
             exit;
         }
 
-        //continue to payment
-        global $error, $woocommerce;
+        global $error;
 
         try {
 
