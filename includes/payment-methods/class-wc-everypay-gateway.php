@@ -54,7 +54,7 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
         add_action('wp_enqueue_scripts', array($this, 'add_everypay_js'));
 
         add_action('admin_init', array($this, 'nag_everypay'));
-        add_action('admin_notices', array($this, 'show_everypay_notices'));
+        add_action('admin_notices', array($this, 'show_admin_notices'));
         add_action('admin_enqueue_scripts', array($this, 'load_everypay_admin'));
         if (is_admin()) {
             add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
@@ -108,10 +108,13 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
     /**
      * Show some notices on the admin
      *
-     * @param array $messages
      */
-    public function show_everypay_notices($messages = array())
+    public function show_admin_notices()
     {
+        if ( ! current_user_can( 'manage_woocommerce' ) ) {
+            return;
+        }
+
         global $current_user;
         $user_id = $current_user->ID;
         $evGway = new WC_Everypay_Gateway();
@@ -120,20 +123,11 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
         if (get_user_meta($user_id, $nag_name)) {
             return;
         }
-        $messages = $evGway->has_issues();
 
-        if (!$messages) {
-            return;
+        if (empty($this->everypaySecretKey) || empty($this->everypayPublicKey)) {
+            echo '<div class="error"><p><strong>Please fill your Everypay keys, in Woocommerce/Settings/Payments</strong><p/></div>';
         }
 
-        $messages = array_merge(array('Everypay plugin (Pay with card) status is off because: <br />'), $messages);
-        $messages = implode('<br />', $messages);
-
-        /* Check that the user hasn't already clicked to ignore the message */
-        $messages = '<p>' . $messages . '</p>' .
-            sprintf(pll__('<a href="%1$s">OK. Hide This Notice</a>'), '?' . $nag_name . '=0');
-
-        echo "<div class=\"update-nag\">$messages</div>";
     }
 
     /**
@@ -183,36 +177,6 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 
         wp_register_script('everypay', EVERYPAY_JS_URL.'everypay.js', array('jquery'), '1.12', true);
         wp_enqueue_script('everypay');
-    }
-
-    /**
-     * Check wether the plugin is available for usage
-     *
-     *
-     * @return boolean
-     */
-    public function has_issues()
-    {
-        $messages = array();
-
-        if (!function_exists('curl_init')) {
-            $messages[] = 'Everypay plugin needs the CURL PHP extension.';
-        }
-
-        if (!function_exists('json_decode')) {
-            $messages[] = ' Everypay plugin needs the JSON PHP extension.';
-        }
-
-        if (empty($this->everypaySecretKey) || empty($this->everypayPublicKey)
-        ) {
-            $messages[] = 'Please fill in your Everypay secret and public keys';
-        }
-
-        if (empty($messages)) {
-            return false;
-        } else {
-            return $messages;
-        }
     }
 
     /**
@@ -494,7 +458,6 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
                 . "EVDATA = " . json_encode($EVDATA) . ";"
                 . "load_everypay();</script></div>",
         );
-
 
         return json_encode($response_data);
     }
