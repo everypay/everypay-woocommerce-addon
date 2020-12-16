@@ -5,7 +5,6 @@ class WC_Everypay_Global_Checks {
     public $errors = [];
 
     public function __construct() {
-        $this->check_curl();
         $this->check_json();
         $this->defineErrorsFromChecks();
     }
@@ -17,17 +16,11 @@ class WC_Everypay_Global_Checks {
         }
     }
 
-    public function check_curl() {
-        if (!function_exists('curl_init'))
-            $this->errors[] = 'Everypay plugin needs the CURL PHP extension.';
-    }
-
     public function check_json() {
         if (!function_exists('json_decode'))
             $this->errors[] = ' Everypay plugin needs the JSON PHP extension.';
 
     }
-
 
 }
 

@@ -45,7 +45,7 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
         }
 
         if (EVERYPAY_SANDBOX) {
-            Everypay::setTestMode();
+            WC_Everypay_Api::setTestMode();
         }
 
         // The hooks
@@ -557,8 +557,8 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
               WC()->session->reload_checkout = true;
               return; */
 
-            Everypay::setApiKey($this->everypaySecretKey);
-            $response = Everypay::addPayment($data);
+            WC_Everypay_Api::setApiKey($this->everypaySecretKey);
+            $response = WC_Everypay_Api::addPayment($data);
 
             if (isset($response['body']['error'])) {
                 $error = $response['body']['error']['message'];
@@ -628,10 +628,10 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
                 'description' => $reason
             );
 
-            $token = get_post_meta($order_id, 'token', true);
+            $token = get_post_meta( (int) $order_id, 'token', true);
 
-            Everypay::setApiKey($this->everypaySecretKey);
-            $refund = Everypay::refundPayment($token, $params);
+            WC_Everypay_Api::setApiKey($this->everypaySecretKey);
+            $refund = WC_Everypay_Api::refundPayment($token, $params);
 
             if (!isset($refund['body']['error'])) {
                 $dt = new DateTime("Now");

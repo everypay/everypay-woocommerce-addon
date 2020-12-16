@@ -25,9 +25,6 @@ function everypay_init()
         return;
     }
 
-    if (!class_exists('Everypay')) {
-        include(plugin_dir_path(__FILE__) . "lib/Everypay.php");
-    }
 
     class WC_Everypay {
 
@@ -54,7 +51,7 @@ function everypay_init()
             define('EVERYPAY_CSS_URL', plugins_url('assets/css/', __FILE__));
 
             require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-global-checks.php";
-            require_once plugin_dir_path(__FILE__) . "lib/Everypay.php";
+            require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-api.php";
             require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-everypay-gateway.php';
 
         }
