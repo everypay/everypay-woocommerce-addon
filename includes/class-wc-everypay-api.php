@@ -167,6 +167,11 @@ class WC_Everypay_Api
         $response['status'] = wp_remote_retrieve_response_code($api_response);
         $response['body'] = json_decode(wp_remote_retrieve_body($api_response), true);
 
+        if (isset($response['body']['error'])) {
+            $response['status'] = 500;
+            $response['body']['error']['message'] = pll__('An error with the payment occurred. Please try again.');
+        }
+
         return $response;
     }
 }
