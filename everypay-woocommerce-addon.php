@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: Everypay WooCommerce Addon
+ * Plugin Name: EveryPay Payment Gateway for WooCommerce
  * Plugin URI: https://wordpress.org/plugins/everypay-woocommerce-addon/
  * Description: This plugin adds a payment option in WooCommerce for customers to pay with their Credit Cards Via Everypay.
- * Version: 1.3.7
+ * Version: 2
  * Author: Everypay S.A.
  * Author URI: https://everypay.gr
  * License: GPL2

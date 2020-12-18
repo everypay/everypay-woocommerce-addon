@@ -24,18 +24,18 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
         $this->id = 'everypay';
         $this->icon = apply_filters('woocommerce_everypay_icon', EVERYPAY_IMAGES_URL.'/everypay.png');
         $this->has_fields = true;
-        $this->method_title = pll__('Everypay Cards Settings');;
+        $this->method_title = pll__('Everypay Payment Gateway');;
         $this->init_form_fields();
         $this->init_settings();
 
         $this->supports = array('products', 'refunds');
         $this->nag_name = 'everypay_nag_notice_' . date('W');
-        $this->title = pll__($this->get_option('everypay_title'));
-        $this->description = pll__($this->get_option('description'));;
-        $this->everypayPublicKey = $this->get_option('everypayPublicKey');
-        $this->everypaySecretKey = $this->get_option('everypaySecretKey');
+        $this->title = pll__(esc_html($this->get_option('everypay_title')));
+        $this->description = pll__(esc_html($this->get_option('description')));;
+        $this->everypayPublicKey = esc_html($this->get_option('everypayPublicKey'));
+        $this->everypaySecretKey = esc_html($this->get_option('everypaySecretKey'));
         $this->everypayMaxInstallments = $this->get_option('everypay_maximum_installments');
-        $this->everypay_sandbox = $this->get_option('everypay_sandbox');
+        $this->everypay_sandbox = esc_html($this->get_option('everypay_sandbox'));
         $this->errors = array();
 
         $this->fee = 0;
@@ -135,8 +135,6 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
      */
     public function load_everypay_admin()
     {
-        //admin.php?page=wc-settings&tab=checkout&section=wc_everypay_gateway
-        //new version admin.php?page=wc-settings&tab=checkout&section=everypay
         if (isset($_GET['page']) && $_GET['page'] == 'wc-settings'
             && isset($_GET['tab']) && $_GET['tab'] == 'checkout'
             && isset($_GET['section']) && in_array($_GET['section'], array('wc_everypay_gateway', 'everypay')))
@@ -251,7 +249,7 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
     {
 
         ?>
-        <h3><?php pll_e('Everypay addon for Woocommerce'); ?></h3>
+        <h3><?php pll_e('Everypay Payment Gateway for Woocommerce'); ?></h3>
         <p><?php pll_e('Everypay is a company that provides a way for individuals and businesses to accept payments over the Internet.'); ?></p>
         <table class="form-table">
             <?php $this->generate_settings_html(); ?>
@@ -377,48 +375,9 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
         return 0;
     }
 
-    /**
-     * The html displayed right after the radio button option
-     *
-     * @global type $woocommerce
-     */
-    public function payment_fields()
-    {
-        global $woocommerce;
-        $amount = '';
-        if (mb_strlen($this->description)) :
-            $fee_id = 'payment-fee';
-            $fees = $woocommerce->cart->get_fees();
-            foreach ($fees as $i => $fee) {
-                if ($fee->id == $fee_id) {
-                    $amount = wc_price($fee->amount);
-                    break;
-                }
-            }
-
-            ?>
-            <p><?php echo str_replace('%AMOUNT%', $amount, pll__($this->description)); ?></p>
-        <?php endif; ?>
-        <style type="text/css">
-            .payment_method_everypay .button-holder{display:none}
-            .payment_box.payment_method_everypay{
-                text-align: center;
-            <?php if (!mb_strlen($this->description)): ?>
-                display: none !important;
-            <?php endif; ?>
-            }
-            .payment_method_everypay img{
-                width: 100%;
-                height: auto;
-                max-height: none !important;
-                max-width: 222px;}
-        </style>
-        <div class="button-holder"></div>
-        <?php
-    }
 
     /**
-     * Open every iframe
+     * Open everypay iframe
      *
      * @return string
      */
@@ -475,16 +434,18 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
         return $tmp;
     }
 
-    /**
-     * Used to proccess the payment
+    /*
+     *  Process the payment
      *
      * @param int $order_id
-     * @return
-     *
      */
     public function process_payment($order_id)
     {
-        $token = isset($_POST['everypayToken']) ? esc_html($_POST['everypayToken']) : 0;
+        if (isset($_POST['everypayToken']) && !empty($_POST['everypayToken'])) {
+            $token = sanitize_text_field($_POST['everypayToken']);
+        } else {
+            $token = 0;
+        }
 
         if (!$token) {
             echo $this->show_everypay_iframe();
