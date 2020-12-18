@@ -40,9 +40,10 @@ Upload folder to the '/wp-content/plugins/' directory
 
 
 == Screenshots ==
-1. The EveryPay Payment Gateway settings screen.
-2. Checkout screen when addon is enabled.
-3. The payment iframe.
+1. EveryPay Payment Gateway plugin activation.
+2. EveryPay Payment Gateway in WooCommerce payment methods
+3. EveryPay Payment Gateway settings in WooCommerce
+4. Everypay Payment Gateway 3ds2 iframe
 
 == Frequently Asked Questions ==
 
