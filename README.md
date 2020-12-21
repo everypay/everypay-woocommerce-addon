@@ -36,13 +36,12 @@ Upload 'everypay-woocommerce-addon' folder to the '/wp-content/plugins/' directo
 2. Set your EveryPay public and secret key in WooCommerce -> Settings -> Payments -> Everypay Payment Gateway
 
 
-
 ### Frequently Asked Questions
 
 1. You need to have WooCommerce plugin installed to make this plugin work
 2. You need to obtain API keys from Everypay <a href="https://dashboard.everypay.gr/">Dashboard</a>
 3. This plugin works on test & live api keys.
-4. This plugin requires SSL as per <a href="https://everypay.com/docs/ssl">here</a> but can work even without SSL.
+4. This plugin requires SSL for production mode, but can work without SSL for the sandbox environment.
 5. This plugin does not store Card Details anywhere.
 6. This plugin comes packed with Official Everypay Libraries
 7. This plugin requires CURL
