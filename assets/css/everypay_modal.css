@@ -128,8 +128,12 @@
     #everypay-modal-content {
         min-width: 20vw;
         max-width: 20vw;
-        min-height: 40vh;
-        max-height: 40vh;
+        min-height: 28vh;
+        max-height: 28vh;
+    }
+    #everypay-logo {
+        height: 5vh;
+        font-size: 1.2em;
     }
     #everypay-secure-logos  {
         min-width: 20vw;
