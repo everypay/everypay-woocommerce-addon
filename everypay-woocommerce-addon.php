@@ -74,3 +74,15 @@ if(!is_plugin_active( 'theme-translation-for-polylang/polylang-theme-translation
 }
 
 add_action('plugins_loaded', 'everypay_init');
+
+function plugin_activation_actions() {
+    require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-actions.php";
+    (new WC_Everypay_Actions())->run_activation_actions();
+}
+register_activation_hook( __FILE__, 'plugin_activation_actions' );
+
+function plugin_deactivation_actions() {
+    require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-actions.php";
+    (new WC_Everypay_Actions())->run_deactivation_actions();
+}
+register_deactivation_hook( __FILE__, 'plugin_deactivation_actions' );
