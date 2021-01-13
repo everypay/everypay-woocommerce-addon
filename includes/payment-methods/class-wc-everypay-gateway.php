@@ -334,20 +334,20 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
                 'placeholder' => 'Everypay Secret Key'
             ),
             'everypay_sandbox' => array(
-                'title' => pll__('Everypay Sandbox'),
+                'title' => pll__('Sandbox Mode'),
                 'type' => 'checkbox',
-                'label' => pll__('Sandbox mode (test)? '),
-                'description' => pll__('If checked its in sanbox mode and if unchecked its in live mode'),
+                'label' => pll__('Enable sandbox mode'),
+                'description' => pll__('If checked its in sandbox mode and if unchecked its in live mode'),
                 'desc_tip' => true,
                 'default' => 'no',
             ),
-            'everypay_error_message' => array(
-                'title' => pll__('Error message'),
-                'type' => 'textarea',
-                'label' => pll__('Error message'),
-                'description' => pll__('Please type a universal error message to display to the customer. Leave empty to show the default error.'),
-                'desc_tip' => pll__('Please type a universal error message to display to the customer. Leave empty to show the default error.'),
-                'default' => '',
+            'everypay_tokenization' => array(
+                'title' => pll__('Tokenization'),
+                'type' => 'checkbox',
+                'label' => pll__('Enable Tokenization'),
+                'description' => pll__('Allow your customers to save their cards.'),
+                'desc_tip' => true,
+                'default' => 'no',
             ),
             'everypay_maximum_installments' => array(
                 'title' => pll__('Everypay Max Installments'),
