@@ -20,7 +20,7 @@ let payformResponseHandler = (response) => {
 
     if (response.onLoad == true) {
         if (EVDATA.save_cards) {
-            modal.createSaveCardCheckbox();
+            modal.show_save_card();
         }
         modal.hide_loading();
         modal.open();

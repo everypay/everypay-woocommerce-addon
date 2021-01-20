@@ -31,6 +31,13 @@ function EverypayModal(EVDATA) {
 
     };
 
+    this.show_save_card = () => {
+        if (document.getElementById('everypay-save-card-box')) {
+            document.getElementById('everypay-save-card-box').remove();
+        }
+        this.createSaveCardCheckbox();
+    };
+
     this.hide_loading = () => {
         try {
             if (!document.querySelector('.loader-everypay')) {

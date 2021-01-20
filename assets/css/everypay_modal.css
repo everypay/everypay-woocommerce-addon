@@ -141,11 +141,15 @@
 /* large screens */
 @media screen and (min-width: 1900px) {
     #everypay-modal-content {
-        min-width: 20vw;
-        max-width: 20vw;
+        min-width: 18vw;
+        max-width: 18vw;
     }
     #everypay-logo {
-        height: 5vh;
+        height: 6vh;
+    }
+    #everypay-logo svg {
+        min-width: 5vw;
+        max-width: 5vw;
     }
     #everypay-secure-logos  {
         min-width: 20vw;
