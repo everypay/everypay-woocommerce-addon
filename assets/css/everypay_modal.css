@@ -154,6 +154,7 @@
     #everypay-secure-logos  {
         min-width: 20vw;
         max-width: 20vw;
+        height: 3%;
     }
     #everypay-secure-logos svg {
         min-width: 6vw;
