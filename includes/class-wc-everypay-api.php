@@ -79,18 +79,6 @@ class WC_Everypay_Api
         return self::$apiEndPoint;
     }
 
-    /**
-     * Create a new customer.
-     *
-     * @param  array $params
-     * @return array
-     */
-    public static function createCustomer(array $params)
-    {
-        $url = self::getApiEndPoint() . '/customers';
-
-        return self::request($url, $params);
-    }
 
     /**
      * Refund the provided payment.
@@ -136,7 +124,7 @@ class WC_Everypay_Api
         $apiKey = self::getApiKey();
         $query = http_build_query($params, null, '&');
 
-        $api_response = wp_remote_post(
+        $api_response = wp_remote_request(
             $url,
             array(
                 'method'  => $method,
@@ -150,7 +138,6 @@ class WC_Everypay_Api
             )
         );
         $response = array();
-
         if ( is_wp_error($api_response) || empty($api_response['body']) ) {
             $response['status'] = 500;
             $response['body']['error']['message'] = 'A problem occurred with the payment. Please try again.';

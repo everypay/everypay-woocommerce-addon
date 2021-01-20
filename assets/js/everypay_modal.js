@@ -1,35 +1,66 @@
 
-var enableEverypayLoadingScreen = function (message) {
 
-    if (!message)
-        message = 'Επεξεργασία παραγγελίας. Παρακαλούμε περιμένετε...';
+function EverypayModal(EVDATA) {
 
-    jQuery('body').prepend(`<div class="loader-everypay" style="position: fixed;height: 100%;width: 100%;background: #f2f2f2;z-index: 100000;top: 0;left: 0;opacity: 0.93;">\n\
-                <center style="width: 100%;position: fixed;clear: both;font-size: 1.3em;top: 40%;margin: 0 auto;"><svg style="max-width: 64px; min-width: 64px; max-height: 64px; min-height: 64px;" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 94.1 94.1"><defs><style>.cls-1{fill:url(#linear-gradient);}.cls-2{fill:#21409a;}.cls-3{fill:#39b54a;}</style><linearGradient id="linear-gradient" x1="47.05" y1="-260.26" x2="47.05" y2="-166.16" gradientTransform="matrix(1, 0, 0, -1, 0, -166.16)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#39b54a"/><stop offset="1" stop-color="#21409a"/></linearGradient></defs><path class="cls-1" d="M94.1,47.05a47.05,47.05,0,1,1-47-47A47,47,0,0,1,94.1,47.05ZM47,8.45A38.69,38.69,0,1,0,85.73,47.14,38.69,38.69,0,0,0,47,8.45Z"><animateTransform attributeType="xml" attributeName="transform" type="rotate" from="0 47.05 47.10" to="360 47.05 47.10" dur="1s" additive="sum" repeatCount="indefinite" /></path><path class="cls-2" d="M66.62,24.83c7.73.84,6.38,8.53,6.38,8.53L66.14,51.3H30l-3.43,9.25C19,59.59,21,52.38,21,52.38L31.38,24.67ZM36.71,33.5l-3.57,9.29H60.65l2.51-6.45a2.52,2.52,0,0,0-1.93-2.84Z"/><path class="cls-3" d="M26.8,61S24.74,68,32.05,69.6H60.68s2.06-7.13-5.25-8.52Z"/></svg><br /><br />\n\
-    ${message}</center></div>`);
-}
-
-var closeEverypayLoadingScreen = function () {
-    if (!document.querySelector('.loader-everypay'))
-        return;
-
-    document.querySelector('.loader-everypay').remove();
-}
-
-
-function EverypayModal() {
+    this.locale = false;
 
     this.init = () => {
         try {
+            if (EVDATA && EVDATA.locale) {
+                this.locale = EVDATA.locale;
+            }
+            this.setTexts();
             this.createHtml();
             this.setEvents();
         } catch (e) {
-            console.log(e)
+
         }
     };
 
-    this.open = () => {
+    this.setTexts = () => {
+        if (this.locale && this.locale != "el") {
+            this.loading_text = 'Processing your order. Please wait...';
+            this.save_card_text = "Save my card";
+            this.close_payment_window_text = 'Are you sure you want to close the payment window?';
+            this.payment_button_text = 'Pay'
+            return;
+        }
+
+        this.loading_text = 'Επεξεργασία παραγγελίας. Παρακαλούμε περιμένετε...';
+        this.save_card_text = "Αποθήκευσε την κάρτα μου";
+        this.close_payment_window_text = 'Είστε σίγουροι πώς θέλετε να κλείσετε το παράθυρο πληρωμής;';
+        this.payment_button_text = 'Πληρωμη'
+
+    };
+
+    this.hide_loading = () => {
+        try {
+            if (!document.querySelector('.loader-everypay')) {
+                return;
+            }
+            document.querySelector('.loader-everypay').remove();
+        } catch (e) {}
+    };
+
+    this.show_loading = (loading_text) => {
+        try {
+            if (!loading_text) {
+                loading_text = this.loading_text;
+            }
+            jQuery('body').prepend(`<div class="loader-everypay" style="position: fixed;height: 100%;width: 100%;background: #f2f2f2;z-index: 100000;top: 0;left: 0;opacity: 0.93;">\n\
+                <center style="width: 100%;position: fixed;clear: both;font-size: 1.3em;top: 40%;margin: 0 auto;"><svg style="max-width: 64px; min-width: 64px; max-height: 64px; min-height: 64px;" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 94.1 94.1"><defs><style>.cls-1{fill:url(#linear-gradient);}.cls-2{fill:#21409a;}.cls-3{fill:#39b54a;}</style><linearGradient id="linear-gradient" x1="47.05" y1="-260.26" x2="47.05" y2="-166.16" gradientTransform="matrix(1, 0, 0, -1, 0, -166.16)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#39b54a"/><stop offset="1" stop-color="#21409a"/></linearGradient></defs><path class="cls-1" d="M94.1,47.05a47.05,47.05,0,1,1-47-47A47,47,0,0,1,94.1,47.05ZM47,8.45A38.69,38.69,0,1,0,85.73,47.14,38.69,38.69,0,0,0,47,8.45Z"><animateTransform attributeType="xml" attributeName="transform" type="rotate" from="0 47.05 47.10" to="360 47.05 47.10" dur="1s" additive="sum" repeatCount="indefinite" /></path><path class="cls-2" d="M66.62,24.83c7.73.84,6.38,8.53,6.38,8.53L66.14,51.3H30l-3.43,9.25C19,59.59,21,52.38,21,52.38L31.38,24.67ZM36.71,33.5l-3.57,9.29H60.65l2.51-6.45a2.52,2.52,0,0,0-1.93-2.84Z"/><path class="cls-3" d="M26.8,61S24.74,68,32.05,69.6H60.68s2.06-7.13-5.25-8.52Z"/></svg><br /><br />\n\
+             ${loading_text}</center></div>`);
+
+        } catch (e) {
+
+        }
+    };
+
+    this.open = (amount) => {
         document.getElementById('everypay-modal').style.display = 'flex';
+        if (amount && document.querySelector('#everypay_custom_btn')) {
+            document.querySelector('#everypay_custom_btn').innerHTML = `${this.payment_button_text} ${amount} €`;
+        }
     };
 
     this.setEvents = () => {
@@ -46,10 +77,47 @@ function EverypayModal() {
     };
 
     this.close = () => {
-       let closeConfirmation = confirm('Are you sure you want to close the payment window?');
+       let closeConfirmation = confirm(this.close_payment_window_text);
 
        if (closeConfirmation)
            document.getElementById('everypay-modal').style.display = 'none';
+    };
+
+    this.createSaveCardCheckbox = (amount) => {
+        let modalFooter = document.querySelector('#everypay-modal-footer');
+        if (!modalFooter || document.getElementById('everypay-save-card-box')) {
+            return;
+        }
+        let saveCardBox = document.createElement('div');
+        saveCardBox.setAttribute('id', 'everypay-save-card-box');
+        let saveCardCheckbox = document.createElement('input');
+        saveCardCheckbox.type = 'checkbox';
+        saveCardCheckbox.name = 'everypaySaveCard';
+        saveCardCheckbox.id = 'everypaySaveCard';
+        saveCardCheckbox.addEventListener('click', (event) => {
+            try {
+                let checkout_form = jQuery('form[name="checkout"]');
+
+                if (event.target.checked) {
+                    if (document.querySelector('input[name="everypay_save_card"]')) {
+                        document.querySelector('input[name="everypay_save_card"]').remove();
+                    }
+                    checkout_form.append('<input type="hidden" value="save_card" name="everypay_save_card">');
+                    return;
+                }
+
+                if (document.querySelector('input[name="everypay_save_card"]')) {
+                    document.querySelector('input[name="everypay_save_card"]').remove();
+                }
+            } catch (e) {}
+
+        })
+        let saveCardText = document.createElement('label');
+        saveCardText.setAttribute('for', 'everypaySaveCard');
+        saveCardText.innerHTML = this.save_card_text;
+        saveCardBox.appendChild(saveCardCheckbox);
+        saveCardBox.appendChild(saveCardText);
+        modalFooter.prepend(saveCardBox);
     };
 
     this.createHtml = () => {
@@ -72,14 +140,31 @@ function EverypayModal() {
         let payformDiv = document.createElement('div');
         payformDiv.setAttribute('id', 'pay-form');
 
+        let modalFooter = document.createElement('div');
+        modalFooter.setAttribute('id', 'everypay-modal-footer');
+
+        let modalFooterBtn = document.createElement('button');
+        modalFooterBtn.innerHTML = this.payment_button_text;
+        modalFooterBtn.setAttribute('id', 'everypay_custom_btn');
+        modalFooterBtn.addEventListener('click', () => {
+            if (!everypay) {
+               return;
+            }
+            everypay.onClick();
+        });
+        modalFooter.appendChild(modalFooterBtn);
+
         modalContentDiv.appendChild(modalHeader);
         modalContentDiv.appendChild(payformDiv);
+        modalContentDiv.appendChild(modalFooter);
+
         modalDiv.appendChild(modalContentDiv);
 
         modalDiv.appendChild(this.createEverypayLogo());
         modalDiv.appendChild(this.createSecureLogos());
 
         document.body.appendChild(modalDiv);
+
     };
 
 

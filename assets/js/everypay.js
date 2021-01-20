@@ -1,69 +1,69 @@
 var EVDATA;
 
-var calculate_installments = function (max_installments) {
-    var installments = [];
-    var y = 2;
-    for (let i = 2; i <= max_installments; i += y) {
-        if (i >= 12)
-            y = 12;
+let modal = new EverypayModal(EVDATA);
+let payformResponseHandler = (response) => {
 
-        installments.push(i);
+    if (response.response === 'success') {
+        let checkout_form = jQuery('form[name="checkout"]');
+        if (!checkout_form) {
+            window.reload();
+        }
+        try {
+            modal.destroy();
+            modal.show_loading();
+            checkout_form.append('<input type="hidden" value="' + response.token + '" name="everypayToken">');s
+            checkout_form.submit();
+        } catch(err){
+            checkout_form.find('#place_order').trigger('click');
+        }
     }
-    return installments;
-}
 
-let modal = new EverypayModal();
-
-function load_everypay() {
-    enableEverypayLoadingScreen();
-
-    var payload = {
-        pk: EVDATA.pk,
-        amount: EVDATA.amount,
-        locale: EVDATA.locale,
-        data: {
-            billing: {
-                addressLine1: EVDATA.billing_address
-            }
-        },
-        txnType: 'tds',
-        theme:'default',
-    formOptions: {},
-    inputOptions: {},
-    errorOptions: {}
+    if (response.onLoad == true) {
+        modal.hide_loading();
+        modal.open(EVDATA.amount);
+    }
 };
 
-    if (EVDATA.max_installments)
-        payload.installments = calculate_installments(EVDATA.max_installments);
+function load_everypay() {
 
-    function handleResponse(api) {
-        if (api.response === 'success') {
-            handleCallback(api)
+    modal.show_loading();
+
+    let payload = create_payload(EVDATA, false);
+
+    if (EVDATA.tokenized) {
+        var tokenized_card = jQuery('input[name="tokenized-card"]:checked');
+        if (!tokenized_card) {
+            window.reload();
+        }
+        payload.data = {
+            cardToken: tokenized_card.attr('crd'),
+            cardType: tokenized_card.attr('card_type'),
+            cardExpMonth: tokenized_card.attr('exp_month'),
+            cardExpYear: tokenized_card.attr('exp_year'),
+            cardLastFour: tokenized_card.attr('last_four')
+        };
+        if (document.getElementById('everypay-save-card-box')) {
+            document.getElementById('everypay-save-card-box').remove();
+        }
+        everypay.tokenized(payload, payformResponseHandler);
+    } else {
+        if (EVDATA.save_cards) {
+            modal.createSaveCardCheckbox(payload.amount);
         }
 
-        if (api.onLoad == true) {
-            closeEverypayLoadingScreen();
-            modal.open()
-        }
+        everypay.payform(payload, payformResponseHandler);
     }
-    everypay.payform(payload, handleResponse);
+
 }
 
 
-handleCallback = function (message) {
-    var checkout_form = jQuery('form[name="checkout"]');
-
-    checkout_form.append('<input type="hidden" value="' + message.token + '" name="everypayToken">');
-
-    try{
+let handleCallback = function (message) {
+    let checkout_form = jQuery('form[name="checkout"]');
+    try {
+        checkout_form.append('<input type="hidden" value="' + message.token + '" name="everypayToken">');
         modal.destroy();
         checkout_form.submit();
     } catch(err){
         checkout_form.find('#place_order').trigger('click');
     }   
 };
-
-(function( $ ) {
-    "use strict";
-    $('body').on('change', 'input[name="payment_method"]', function() { $('body').trigger('update_checkout'); });
-})(jQuery);

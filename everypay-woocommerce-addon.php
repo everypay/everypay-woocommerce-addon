@@ -50,9 +50,13 @@ function everypay_init()
             define('EVERYPAY_JS_URL', plugins_url('assets/js/', __FILE__));
             define('EVERYPAY_CSS_URL', plugins_url('assets/css/', __FILE__));
 
-            require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-global-checks.php";
+	        require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-helpers.php";
             require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-api.php";
-            require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-everypay-gateway.php';
+	        require_once dirname( __FILE__ ) . '/includes/class-wc-everypay-renderer.php';
+	        require_once dirname( __FILE__ ) . '/includes/admin/class-wc-everypay-admin.php';
+	        require_once dirname( __FILE__ ) . '/includes/class-wc-everypay-repository.php';
+	        require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-everypay-gateway.php';
+            require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-everypay-tokenization.php';
 
         }
 
@@ -64,25 +68,24 @@ function everypay_init()
 
 include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 
-if(!is_plugin_active( 'theme-translation-for-polylang/polylang-theme-translation.php' ) ) {
+if(!is_plugin_active( 'theme-translation-for-polylang/polylang-theme-translation.php' ) && !function_exists('pll__')) {
 	function pll__($string){
 		return __($string, 'woocommerce');
 	}
-	function pll_e($string){
-		echo __($string, 'woocommerce');
-	}
+
 }
 
 add_action('plugins_loaded', 'everypay_init');
 
-function plugin_activation_actions() {
-    require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-actions.php";
-    (new WC_Everypay_Actions())->run_activation_actions();
+function install() {
+    require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-repository.php";
+    (new WC_Everypay_Repository())->create_tokenization_table();
 }
-register_activation_hook( __FILE__, 'plugin_activation_actions' );
 
-function plugin_deactivation_actions() {
-    require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-actions.php";
-    (new WC_Everypay_Actions())->run_deactivation_actions();
+function uninstall() {
+	require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-repository.php";
+	(new WC_Everypay_Repository())->drop_tokenization_table();
 }
-register_deactivation_hook( __FILE__, 'plugin_deactivation_actions' );
+
+register_activation_hook( __FILE__, 'install' );
+register_deactivation_hook( __FILE__, 'uninstall' );
