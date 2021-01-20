@@ -19,16 +19,18 @@ let payformResponseHandler = (response) => {
     }
 
     if (response.onLoad == true) {
+        if (EVDATA.save_cards) {
+            modal.createSaveCardCheckbox();
+        }
         modal.hide_loading();
-        modal.open(EVDATA.amount);
+        modal.open();
     }
 };
 
 function load_everypay() {
 
     modal.show_loading();
-
-    let payload = create_payload(EVDATA, false);
+    let payload = create_payload(EVDATA);
 
     if (EVDATA.tokenized) {
         var tokenized_card = jQuery('input[name="tokenized-card"]:checked');
@@ -47,10 +49,6 @@ function load_everypay() {
         }
         everypay.tokenized(payload, payformResponseHandler);
     } else {
-        if (EVDATA.save_cards) {
-            modal.createSaveCardCheckbox(payload.amount);
-        }
-
         everypay.payform(payload, payformResponseHandler);
     }
 

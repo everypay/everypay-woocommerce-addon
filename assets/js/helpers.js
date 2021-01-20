@@ -1,13 +1,12 @@
 
-let create_payload = (everypayData, displayPayButton = true) => {
+let create_payload = (everypayData) => {
    let payload = {
         pk: everypayData.pk,
         amount: everypayData.amount,
         locale: everypayData.locale,
         data: {
             billing: { addressLine1: everypayData.billing_address }
-        },
-        display: { button: displayPayButton }
+        }
     };
 
     if (everypayData.max_installments) {

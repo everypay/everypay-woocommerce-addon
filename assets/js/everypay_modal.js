@@ -22,14 +22,12 @@ function EverypayModal(EVDATA) {
             this.loading_text = 'Processing your order. Please wait...';
             this.save_card_text = "Save my card";
             this.close_payment_window_text = 'Are you sure you want to close the payment window?';
-            this.payment_button_text = 'Pay'
             return;
         }
 
         this.loading_text = 'Επεξεργασία παραγγελίας. Παρακαλούμε περιμένετε...';
         this.save_card_text = "Αποθήκευσε την κάρτα μου";
         this.close_payment_window_text = 'Είστε σίγουροι πώς θέλετε να κλείσετε το παράθυρο πληρωμής;';
-        this.payment_button_text = 'Πληρωμη'
 
     };
 
@@ -56,11 +54,8 @@ function EverypayModal(EVDATA) {
         }
     };
 
-    this.open = (amount) => {
+    this.open = () => {
         document.getElementById('everypay-modal').style.display = 'flex';
-        if (amount && document.querySelector('#everypay_custom_btn')) {
-            document.querySelector('#everypay_custom_btn').innerHTML = `${this.payment_button_text} ${amount} €`;
-        }
     };
 
     this.setEvents = () => {
@@ -83,9 +78,9 @@ function EverypayModal(EVDATA) {
            document.getElementById('everypay-modal').style.display = 'none';
     };
 
-    this.createSaveCardCheckbox = (amount) => {
-        let modalFooter = document.querySelector('#everypay-modal-footer');
-        if (!modalFooter || document.getElementById('everypay-save-card-box')) {
+    this.createSaveCardCheckbox = () => {
+        let payformDiv = document.querySelector('#pay-form');
+        if (!payformDiv || document.getElementById('everypay-save-card-box')) {
             return;
         }
         let saveCardBox = document.createElement('div');
@@ -117,7 +112,7 @@ function EverypayModal(EVDATA) {
         saveCardText.innerHTML = this.save_card_text;
         saveCardBox.appendChild(saveCardCheckbox);
         saveCardBox.appendChild(saveCardText);
-        modalFooter.prepend(saveCardBox);
+        payformDiv.append(saveCardBox);
     };
 
     this.createHtml = () => {
@@ -140,31 +135,14 @@ function EverypayModal(EVDATA) {
         let payformDiv = document.createElement('div');
         payformDiv.setAttribute('id', 'pay-form');
 
-        let modalFooter = document.createElement('div');
-        modalFooter.setAttribute('id', 'everypay-modal-footer');
-
-        let modalFooterBtn = document.createElement('button');
-        modalFooterBtn.innerHTML = this.payment_button_text;
-        modalFooterBtn.setAttribute('id', 'everypay_custom_btn');
-        modalFooterBtn.addEventListener('click', () => {
-            if (!everypay) {
-               return;
-            }
-            everypay.onClick();
-        });
-        modalFooter.appendChild(modalFooterBtn);
-
         modalContentDiv.appendChild(modalHeader);
         modalContentDiv.appendChild(payformDiv);
-        modalContentDiv.appendChild(modalFooter);
 
         modalDiv.appendChild(modalContentDiv);
-
         modalDiv.appendChild(this.createEverypayLogo());
         modalDiv.appendChild(this.createSecureLogos());
 
         document.body.appendChild(modalDiv);
-
     };
 
 
