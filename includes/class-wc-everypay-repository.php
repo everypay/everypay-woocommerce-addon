@@ -17,7 +17,7 @@ class WC_Everypay_Repository
 
 	public function delete_user_card($friendly_name, $user_id)
 	{
-		$this->wpdb->query("DELETE FROM $this->tokenization_table WHERE wp_user_id = $user_id and friendly_name = '$friendly_name'");
+		return $this->wpdb->query( "DELETE FROM $this->tokenization_table WHERE wp_user_id = $user_id and friendly_name = '$friendly_name'");
 	}
 
 	public function add_new_card($card_data)

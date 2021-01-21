@@ -120,9 +120,9 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
         if (isset($_POST['delete_card']) && is_user_logged_in() && $this->tokenization_status == 'yes') {
 	        $user_id = get_current_user_id();
 	        (new WC_Everypay_Tokenization())->delete_card($_POST['delete_card'], $user_id);
-	       return array(
+	        return array(
 		        'result'   => 'success',
-                'messages' => ''
+		        'messages' => '<div class=""></div>'
 	        );
         }
 	    if (!isset($_POST['everypayToken']) || empty($_POST['everypayToken'])) {
@@ -174,9 +174,8 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 
 	public function payment_fields()
 	{
-		// echo $this->description;
-
 		if ($this->tokenization_status != "yes" || !is_user_logged_in()) {
+			echo pll__($this->description);
 			return;
 		}
 		$repository = new WC_Everypay_Repository();

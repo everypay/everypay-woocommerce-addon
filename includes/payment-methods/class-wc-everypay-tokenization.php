@@ -14,11 +14,21 @@ class WC_Everypay_Tokenization
 
 	public function delete_card($friendly_name, $user_id)
 	{
-		if (empty($friendly_name)) {
-			return;
+		try {
+			if (empty($friendly_name)) {
+				throw new Exception('A problem occurred. Please try again');
+			}
+			$friendly_name = sanitize_text_field($friendly_name);
+			$delete = $this->repository->delete_user_card($friendly_name, $user_id);
+
+			if ($delete === false) {
+				throw new Exception('A problem occurred. Please try again');
+			}
+			return true;
+		} catch (Exception $e) {
+			return false;
 		}
-		$friendly_name = sanitize_text_field($friendly_name);
-		$this->repository->delete_user_card($friendly_name, $user_id);
+
 	}
 
 	public function process_tokenized_payment($user_id, $payload)
