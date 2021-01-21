@@ -3,8 +3,8 @@
 class WC_Everypay_Repository
 {
 
-	private string $tokenization_table;
-	private string $db_charset_collate;
+	private $tokenization_table;
+	private $db_charset_collate;
 	private $wpdb;
 
 	public function __construct()
@@ -81,7 +81,7 @@ class WC_Everypay_Repository
 	{
 		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
-		$sql = "CREATE TABLE IF NOT EXISTS $this->tokenization_table (
+		$sql = "CREATE TABLE IF NOT EXISTS ".$this->tokenization_table ." (
           id INT NOT NULL AUTO_INCREMENT,
           wp_user_id bigint(20) UNSIGNED,
           friendly_name VARCHAR(100) NOT NULL,
