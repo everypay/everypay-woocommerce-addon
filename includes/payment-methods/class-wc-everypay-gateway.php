@@ -135,7 +135,7 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 
         try {
             $payload = $this->create_payload($wc_order, $token);
-            if (is_user_logged_in() && (isset($_POST['everypay_save_card']) || isset($_POST['everypay_card_token']) ) && $this->tokenization_status == 'yes') {
+            if (is_user_logged_in() && (isset($_POST['everypay_save_card']) || isset($_POST['tokenized-card']) ) && $this->tokenization_status == 'yes') {
 	            $user_id = $wc_order->get_user_id();
 	            $everypay_tokenization = new WC_Everypay_Tokenization();
 	            $response = $everypay_tokenization->process_tokenized_payment($user_id, $payload);

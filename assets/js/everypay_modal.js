@@ -99,18 +99,14 @@ function EverypayModal(EVDATA) {
         saveCardCheckbox.addEventListener('click', (event) => {
             try {
                 let checkout_form = jQuery('form[name="checkout"]');
-
+                if (document.querySelector('input[name="everypay_save_card"]')) {
+                    document.querySelector('input[name="everypay_save_card"]').remove();
+                }
                 if (event.target.checked) {
-                    if (document.querySelector('input[name="everypay_save_card"]')) {
-                        document.querySelector('input[name="everypay_save_card"]').remove();
-                    }
                     checkout_form.append('<input type="hidden" value="save_card" name="everypay_save_card">');
                     return;
                 }
 
-                if (document.querySelector('input[name="everypay_save_card"]')) {
-                    document.querySelector('input[name="everypay_save_card"]').remove();
-                }
             } catch (e) {}
 
         })
