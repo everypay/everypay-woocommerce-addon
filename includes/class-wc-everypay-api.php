@@ -122,6 +122,11 @@ class WC_Everypay_Api
     private static function request(string $url, array $params = array(), string $method = 'POST')
     {
         $apiKey = self::getApiKey();
+
+        if (!$apiKey) {
+        	throw new Exception('api secret key is missing');
+        }
+
         $query = http_build_query($params, null, '&');
         $api_response = wp_remote_request(
             $url,
@@ -137,22 +142,22 @@ class WC_Everypay_Api
         );
 
         if (is_wp_error($api_response)) {
-	        throw new Exception($api_response->get_error_message());
+	        throw new Exception($api_response->get_error_message(). ' '. $query);
         }
 
         $response = array();
         if (empty($api_response['body']) ) {
-			throw new Exception('response body from api is empty.');
+			throw new Exception('response body from api is empty.'. ' '. $query);
         }
 
         if (wp_remote_retrieve_header($api_response, 'content-type') != 'application/json') {
-			throw new Exception('content type is not application/json');
+			throw new Exception('content type is not application/json'. ' '. $query);
         }
         $response['status'] = wp_remote_retrieve_response_code($api_response);
         $response['body'] = json_decode(wp_remote_retrieve_body($api_response), true);
 
         if (isset($response['body']['error'])) {
-            throw new Exception($response['body']['error']['message']);
+            throw new Exception($response['body']['error']['message']. ' '. $query);
         }
 
         return $response;
