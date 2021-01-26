@@ -20,10 +20,11 @@
     background-color: #fefefe;
     padding: 0;
     border: 1px solid #888;
-    min-width: 35vw;
+    min-width: 40vw;
+    /*
     max-width: 35vw;
+    */
     min-height: 430px !important;
-    max-height: 450px !important;
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
     -webkit-animation-name: everypayModalAnimation;
     -webkit-animation-duration: 0.4s;
@@ -142,7 +143,9 @@
 @media screen and (min-width: 1900px) {
     #everypay-modal-content {
         min-width: 18vw;
-        max-width: 18vw;
+    }
+    #everypay-save-card-box {
+        margin-bottom: 1vh !important;
     }
     #everypay-logo {
         height: 6vh;

@@ -123,40 +123,36 @@ class WC_Everypay_Api
     {
         $apiKey = self::getApiKey();
         $query = http_build_query($params, null, '&');
-
         $api_response = wp_remote_request(
             $url,
             array(
                 'method'  => $method,
                 'headers' => array(
-                    'User-Agent' => 'EveryPay Woocommerce Plugin',
+                    'User-Agent' => 'EveryPay Woocommerce',
                     'Authorization' => 'Basic ' . base64_encode( $apiKey . ':')
                 ),
                 'body'    => $query,
-                'timeout' => 30,
-                'sslverify' => false,
+                'timeout' => 50
             )
         );
+
+        if (is_wp_error($api_response)) {
+	        throw new Exception($api_response->get_error_message());
+        }
+
         $response = array();
-        if ( is_wp_error($api_response) || empty($api_response['body']) ) {
-            $response['status'] = 500;
-            $response['body']['error']['message'] = 'A problem occurred with the payment. Please try again.';
-            return $response;
+        if (empty($api_response['body']) ) {
+			throw new Exception('response body from api is empty.');
         }
 
         if (wp_remote_retrieve_header($api_response, 'content-type') != 'application/json') {
-            $response['status'] = 500;
-            $message = 'The returned curl response is not in json format';
-            $response['body']['error']['message'] = $message;
-            return $response;
+			throw new Exception('content type is not application/json');
         }
-
         $response['status'] = wp_remote_retrieve_response_code($api_response);
         $response['body'] = json_decode(wp_remote_retrieve_body($api_response), true);
 
         if (isset($response['body']['error'])) {
-            $response['status'] = 500;
-            $response['body']['error']['message'] = pll__('An error with the payment occurred. Please try again.');
+            throw new Exception($response['body']['error']['message']);
         }
 
         return $response;

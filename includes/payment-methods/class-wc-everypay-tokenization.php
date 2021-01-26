@@ -41,41 +41,35 @@ class WC_Everypay_Tokenization
 			$this->save_new_customer($api_response);
 			return $api_response;
 		}
-		$this->add_new_customer_card($payload);
+		return $this->add_new_customer_card($payload);
 	}
 
-	private function pay($payload)
-	{
-		return WC_Everypay_Api::addPayment($payload);
-	}
 
 	private function add_new_customer_card($payload)
 	{
-		$card_id = $this->repository->get_card_id($this->user->customer_token, $_POST['tokenized-card']);
-
-		if ($card_id) {
-			$api_response = $this->pay($payload);
-			$card_data = $this->createCardData($api_response);
-			$this->repository->update_card_crd($card_id->id, $card_data['crd'], $card_data['customer_token']);
-			return $api_response;
-		}
-
 		$payload['customer'] = $this->user->customer_token;
 		$api_response = $this->pay($payload);
 		$card_data = $this->createCardData($api_response);
-		$this->repository->add_new_card($card_data);
+		$card_id = $this->repository->get_card_id($this->user->customer_token, $card_data['friendly_name']);
+
+		if ($card_id) {
+			$this->repository->update_card_crd($card_id->id, $card_data['crd'], $card_data['customer_token']);
+		} else {
+			$this->repository->add_new_card($card_data);
+		}
+
 		return $api_response;
 	}
 
 	private function createCardData($api_response)
 	{
-		if (isset($api_response['error'])) {
-			throw new Exception('An error occurred.');
-		}
 		$api_response = $api_response['body'];
 		$customer_token = $this->user->customer_token;
 		if (!$customer_token) {
 			$customer_token = $api_response['customer']['token'];
+		}
+		if (!$api_response['card']) {
+			throw new Exception('tokenization: response does not contain card.');
 		}
 		return array(
 			'wp_user_id' => $this->user_id,
@@ -87,6 +81,11 @@ class WC_Everypay_Tokenization
 			'card_type' => sanitize_text_field($api_response['card']['type']),
 			'card_last_four' => sanitize_text_field($api_response['card']['last_four'])
 		);
+	}
+
+	private function pay($payload)
+	{
+		return WC_Everypay_Api::addPayment($payload);
 	}
 
 	private function save_new_customer($api_response)

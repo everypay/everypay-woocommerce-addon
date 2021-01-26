@@ -79,12 +79,16 @@ add_action('plugins_loaded', 'everypay_init');
 
 function install() {
     require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-repository.php";
-    (new WC_Everypay_Repository())->create_tokenization_table();
+    $repository = new WC_Everypay_Repository();
+	$repository->create_tokenization_table();
+	$repository->create_logging_table();
 }
 
 function uninstall() {
 	require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-repository.php";
-	(new WC_Everypay_Repository())->drop_tokenization_table();
+	$repository = new WC_Everypay_Repository();
+	$repository->drop_tokenization_table();
+	$repository->drop_logging_table();
 }
 
 register_activation_hook( __FILE__, 'install' );

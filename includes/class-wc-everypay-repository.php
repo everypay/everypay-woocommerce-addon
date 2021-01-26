@@ -4,6 +4,7 @@ class WC_Everypay_Repository
 {
 
 	private $tokenization_table;
+	private $logging_table;
 	private $db_charset_collate;
 	private $wpdb;
 
@@ -12,7 +13,16 @@ class WC_Everypay_Repository
 		global $wpdb;
 		$this->wpdb = $wpdb;
 		$this->tokenization_table = $wpdb->prefix . "everypay_tokenization";
+		$this->logging_table = $wpdb->prefix . "everypay_logging";
 		$this->db_charset_collate = $wpdb->get_charset_collate();
+	}
+
+	public function save_logs($type, $log)
+	{
+		$this->wpdb->insert($this->logging_table, [
+			'type' => $type,
+			'log' => $log
+		]);
 	}
 
 	public function delete_user_card($friendly_name, $user_id)
@@ -75,6 +85,25 @@ class WC_Everypay_Repository
 	{
 		$sql = "DROP TABLE IF EXISTS ".$this->tokenization_table;
 		$this->wpdb->query($sql);
+	}
+
+	public function drop_logging_table()
+	{
+		$sql = "DROP TABLE IF EXISTS ".$this->logging_table;
+		$this->wpdb->query($sql);
+	}
+
+	public function create_logging_table()
+	{
+		$sql = "CREATE TABLE IF NOT EXISTS ".$this->logging_table ." (
+          id INT NOT NULL AUTO_INCREMENT,
+          datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          type VARCHAR(100) NOT NULL,
+          log VARCHAR(2000) NOT NULL,
+          PRIMARY KEY  (id) 
+        ) $this->db_charset_collate;";
+		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+		dbDelta($sql);
 	}
 
 	public function create_tokenization_table()

@@ -2,7 +2,6 @@ var EVDATA;
 
 let modal = new EverypayModal(EVDATA);
 let payformResponseHandler = (response) => {
-
     if (response.response === 'success') {
         let checkout_form = jQuery('form[name="checkout"]');
         if (!checkout_form) {
@@ -11,7 +10,8 @@ let payformResponseHandler = (response) => {
         try {
             modal.destroy();
             modal.show_loading();
-            checkout_form.append('<input type="hidden" value="' + response.token + '" name="everypayToken">');s
+            checkout_form.append('<input type="hidden" value="' + response.token + '" name="everypayToken">');
+            setTimeout(() => { modal.hide_loading(); }, 5000)
             checkout_form.submit();
         } catch(err){
             checkout_form.find('#place_order').trigger('click');
