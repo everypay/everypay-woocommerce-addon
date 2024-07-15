@@ -54,13 +54,13 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
         $this->id = 'everypay';
         $this->icon = apply_filters('woocommerce_everypay_icon', EVERYPAY_IMAGES_URL.'/everypay.png');
         $this->has_fields = true;
-        $this->method_title = pll__('Everypay');;
-	    $this->method_description = pll__('Everypay is a company that provides a way for individuals and businesses to accept payments over the Internet.');
+        $this->method_title = 'Everypay';
+	    $this->method_description = 'Everypay is a company that provides a way for individuals and businesses to accept payments over the Internet.';
 	    $this->init_form_fields();
         $this->init_settings();
         $this->supports = array('products', 'refunds');
-        $this->title = pll__(esc_html($this->get_option('everypay_title')));
-        $this->description = pll__(esc_html($this->get_option('description')));;
+        $this->title = esc_html($this->get_option('everypay_title'));
+        $this->description = esc_html($this->get_option('description'));
 
         $this->everypayPublicKey = esc_html($this->get_option('everypayPublicKey'));
         $this->everypaySecretKey = esc_html($this->get_option('everypaySecretKey'));
@@ -98,12 +98,27 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
         $billing_email = $wc_order->billing_email;
         $billing_phone = $wc_order->billing_phone;
 	    $description = get_bloginfo('name') . ' / '
-	                   . pll__('Order') . ' #' . $wc_order->get_order_number() . ' - '
+	                   . 'Order' . ' #' . $wc_order->get_order_number() . ' - '
 	                   . number_format($amount/100, 2, ',', '.') . '€';
 
 	    if (!$billing_email || !$billing_phone || !$description || !$token) {
 	        throw new Exception('create_payload: invalid variable');
         }
+        $installments = $this->helpers->calculate_installments(
+                $amount,
+                $this->max_installments
+        );
+//        @note
+       error_log(
+               json_encode([
+                   'description' => $description,
+                   'amount' => $amount,
+                   'payee_email' => $billing_email,
+                   'payee_phone' => $billing_phone,
+                   'token' => $token,
+                   'max_installments' => $installments]
+       )
+               .PHP_EOL, 3, __DIR__.'/loggy1.log');
 
 	    return array(
 		    'description' => $description,
@@ -111,7 +126,7 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 		    'payee_email' => $billing_email,
 		    'payee_phone' => $billing_phone,
 		    'token' => $token,
-		    'max_installments' => $this->helpers->calculate_installments($amount, $this->max_installments),
+		    'max_installments' => $installments,
 	    );
     }
 
@@ -120,51 +135,63 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
      *
      * @param int $order_id
      */
-    public function process_payment($order_id)
-    {
-	    try {
-		    if (isset($_POST['delete_card']) && is_user_logged_in() && $this->tokenization_status == 'yes') {
-			    $user_id = get_current_user_id();
-			    (new WC_Everypay_Tokenization())->delete_card($_POST['delete_card'], $user_id);
-			    return array(
-				    'result'   => 'success',
-				    'messages' => '<div class=""></div>'
-			    );
-		    }
-		    if (!isset($_POST['everypayToken']) || empty($_POST['everypayToken'])) {
-			    $this->renderer->render_iframe(WC()->cart->total , $this->max_installments);
-			    exit;
-		    }
+	public function process_payment($order_id)
+	{
+		try {
+			if (isset($_POST['delete_card']) && is_user_logged_in() && $this->tokenization_status == 'yes') {
+				$user_id = get_current_user_id();
+				(new WC_Everypay_Tokenization())->delete_card($_POST['delete_card'], $user_id);
+				return array(
+					'result'   => 'success',
+					'messages' => '<div class=""></div>'
+				);
+			}
+			if (!isset($_POST['everypayToken']) || empty($_POST['everypayToken'])) {
+				$this->renderer->render_iframe(WC()->cart->total , $this->max_installments);
+				exit;
+			}
+			$token = sanitize_text_field($_POST['everypayToken']);
+			unset($_POST['everypayToken']);
+			$wc_order = new WC_Order($order_id);
+			WC_Everypay_Api::setApiKey($this->everypaySecretKey);
+			$payload = $this->create_payload($wc_order, $token);
 
-		    $token = sanitize_text_field($_POST['everypayToken']);
-		    $wc_order = new WC_Order($order_id);
-		    WC_Everypay_Api::setApiKey($this->everypaySecretKey);
-		    $payload = $this->create_payload($wc_order, $token);
+			if (is_user_logged_in() && (isset($_POST['everypay_save_card']) || isset($_POST['tokenized-card']) ) && $this->tokenization_status == 'yes') {
+				(new WC_Everypay_Repository())->save_logs('tokenization_payment', implode(" ",$payload));
+				$user_id = $wc_order->get_user_id();
+				$everypay_tokenization = new WC_Everypay_Tokenization();
+				$everypay_tokenization->process_tokenized_payment($user_id, $payload);
+			} else {
+				(new WC_Everypay_Repository())->save_logs('payment', implode(" ",$payload));
+				WC_Everypay_Api::addPayment($payload);
+			}
+			return $this->complete_order($wc_order);
 
-		    if (is_user_logged_in() && (isset($_POST['everypay_save_card']) || isset($_POST['tokenized-card']) ) && $this->tokenization_status == 'yes') {
-			    $user_id = $wc_order->get_user_id();
-			    $everypay_tokenization = new WC_Everypay_Tokenization();
-			    $everypay_tokenization->process_tokenized_payment($user_id, $payload);
-		    } else {
-			    WC_Everypay_Api::addPayment($payload);
-		    }
-		    return $this->complete_order($wc_order);
+		} catch (Exception $e) {
 
-	    } catch (Exception $e) {
-		    $error = pll__('An error occurred. Please try again.');
-		    wc_add_notice(esc_html($error), $notice_type = 'error');
-		    (new WC_Everypay_Repository())->save_logs('error', $e->getMessage());
-		    return;
-	    }
+			$error = 'An error occurred. Please try again.';
+			wc_add_notice(esc_html($error), 'error');
+			$response_data = array(
+                'result' => 'failure',
+                'reload' => true,
+                'refresh' => true
+			);
+			echo json_encode($response_data);
+			if ($order_id) {
+				wp_delete_post($order_id,true);
+			}
+			(new WC_Everypay_Repository())->save_logs('error', $e->getMessage());
+			exit;
+		}
 
-    }
+	}
 
     private function complete_order($wc_order)
     {
 	    $dt = new DateTime("Now");
 	    $timestamp = $dt->format('Y-m-d H:i:s e');
 
-	    $wc_order->add_order_note(pll__('Everypay payment completed at-' .$timestamp));
+	    $wc_order->add_order_note('Everypay payment completed at-' .$timestamp);
 	    $wc_order->payment_complete();
 	    $wc_order->get_order();
 	    WC()->cart->empty_cart();
@@ -178,7 +205,7 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 
 	public function payment_fields()
 	{
-		echo pll__($this->description);
+		echo $this->description;
 
 		if ($this->tokenization_status != "yes" || !is_user_logged_in()) {
 			return;
@@ -187,7 +214,7 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
         $user_id = get_current_user_id();
         $customer_cards = $repository->get_customer_cards($user_id);
 
-		wp_enqueue_script('tokenization_js', EVERYPAY_JS_URL.'tokenization.js', array('jquery'), '1.12', true);
+		wp_enqueue_script('tokenization_js', EVERYPAY_JS_URL.'tokenization.js', array('jquery'), false, true);
 
 		echo '<div>';
 		if (!empty($customer_cards)) {
@@ -228,7 +255,7 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
             $refToken = $refund['body']['token'];
 
             $wc_order = new WC_Order($order_id);
-            $wc_order->add_order_note(pll__('Everypay Refund completed at-' . $timestamp . '-with Refund Token=' . $refToken));
+            $wc_order->add_order_note('Everypay Refund completed at-' . $timestamp . '-with Refund Token=' . $refToken);
 
             return true;
 
@@ -253,26 +280,27 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 		wp_register_style( 'everypay_modal', EVERYPAY_CSS_URL.'everypay_modal.css' );
 		wp_enqueue_style( 'everypay_modal' );
 
-		if (EVERYPAY_SANDBOX)
+		if (EVERYPAY_SANDBOX) {
 			wp_register_script('everypay_script', "https://sandbox-js.everypay.gr/v3");
-		else
+		} else {
 			wp_register_script('everypay_script', "https://js.everypay.gr/v3");
+		}
 
 		wp_enqueue_script('everypay_script');
 
 		wp_register_script('everypay_helpers', EVERYPAY_JS_URL.'helpers.js');
 		wp_enqueue_script('everypay_helpers');
 
-		wp_register_script('everypay_modal', EVERYPAY_JS_URL.'everypay_modal.js', array('jquery'), '1.12', true);
+		wp_register_script('everypay_modal', EVERYPAY_JS_URL.'everypay_modal.js', array(), false, true);
 		wp_enqueue_script('everypay_modal');
 
-		wp_register_script('everypay', EVERYPAY_JS_URL.'everypay.js', array('jquery'), '1.12', true);
+		wp_register_script('everypay', EVERYPAY_JS_URL.'everypay.js', array(), false, true);
 		wp_enqueue_script('everypay');
 	}
 
 	private function handle_payment_error($errorMessage)
 	{
-		$error = pll__('An error occurred. Please try again.');
+		$error = 'An error occurred. Please try again.';
 		wc_add_notice($error, $notice_type = 'error');
         (new WC_Everypay_Repository())->save_logs('error', $errorMessage);
 	}

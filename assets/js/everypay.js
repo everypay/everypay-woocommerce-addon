@@ -1,21 +1,40 @@
+var meta = document.createElement('meta');
+meta.httpEquiv = "X-UA-Compatible";
+meta.content = "IE=edge";
+document.getElementsByTagName('head')[0].appendChild(meta);
 var EVDATA;
+var modal = new EverypayModal(EVDATA);
 
-let modal = new EverypayModal(EVDATA);
-let payformResponseHandler = (response) => {
-    if (response.response === 'success') {
-        let checkout_form = jQuery('form[name="checkout"]');
-        if (!checkout_form) {
-            window.reload();
-        }
-        try {
+var payformResponseHandler = function(response) {
+
+    if (response && response.response && response.response === 'success') {
+
+        if (modal) {
             modal.destroy();
             modal.show_loading();
-            checkout_form.append('<input type="hidden" value="' + response.token + '" name="everypayToken">');
-            setTimeout(() => { modal.hide_loading(); }, 5000)
-            checkout_form.submit();
-        } catch(err){
-            checkout_form.find('#place_order').trigger('click');
+            setTimeout(function () {
+                modal.hide_loading();
+            }, 4000);
         }
+        if (document.querySelector('input[name="everypayToken"]')) {
+            document.querySelector('input[name="everypayToken"]').remove();
+        }
+
+        var checkout_form = document.querySelector('form[name="checkout"]');
+        var placeOrderButton = document.querySelector("#place_order");
+        if (checkout_form && placeOrderButton
+        ) {
+            var tokenInput = document.createElement('input');
+            tokenInput.setAttribute('type', 'hidden');
+            tokenInput.setAttribute('id', 'everypayTokenInput');
+            tokenInput.setAttribute('name', 'everypayToken');
+            tokenInput.setAttribute('value', response.token);
+            checkout_form.appendChild(tokenInput);
+            setTimeout(function() {
+                placeOrderButton.click();
+            }, 350);
+        }
+
     }
 
     if (response.onLoad == true) {
@@ -27,41 +46,52 @@ let payformResponseHandler = (response) => {
     }
 };
 
+function checkIfTokenizedCardHasTheRequiredFields(tokenizedCard) {
+    if (!tokenizedCard.hasAttribute('crd') ||
+        !tokenizedCard.hasAttribute('card_type') ||
+        !tokenizedCard.hasAttribute('exp_month') ||
+        !tokenizedCard.hasAttribute('exp_year') ||
+        !tokenizedCard.hasAttribute('last_four')
+    ) {
+        return false;
+    }
+    return true;
+}
+
 function load_everypay() {
-
     modal.show_loading();
-    let payload = create_payload(EVDATA);
-
+    var payload = create_payload(EVDATA);
+    console.log('check', {payload})
+    if (!payload) {
+        alert("An error occurred. Please try again.");
+        modal.hide_loading();
+        return;
+    }
     if (EVDATA.tokenized) {
-        var tokenized_card = jQuery('input[name="tokenized-card"]:checked');
-        if (!tokenized_card) {
-            window.reload();
+        var tokenized_card = document.querySelector('input[name="tokenized-card"]:checked');
+        if (!tokenized_card || !checkIfTokenizedCardHasTheRequiredFields(tokenized_card)) {
+            alert("An error occurred. Please try again.");
+            modal.hide_loading();
+            return;
         }
+
+        // @note fix to send billing with tokenized card
         payload.data = {
-            cardToken: tokenized_card.attr('crd'),
-            cardType: tokenized_card.attr('card_type'),
-            cardExpMonth: tokenized_card.attr('exp_month'),
-            cardExpYear: tokenized_card.attr('exp_year'),
-            cardLastFour: tokenized_card.attr('last_four')
+            ...payload.data,
+            cardToken: tokenized_card.getAttribute('crd'),
+            cardType: tokenized_card.getAttribute('card_type'),
+            cardExpMonth: tokenized_card.getAttribute('exp_month'),
+            cardExpYear: tokenized_card.getAttribute('exp_year'),
+            cardLastFour: tokenized_card.getAttribute('last_four')
         };
         if (document.getElementById('everypay-save-card-box')) {
             document.getElementById('everypay-save-card-box').remove();
         }
         everypay.tokenized(payload, payformResponseHandler);
-    } else {
+    } else{
         everypay.payform(payload, payformResponseHandler);
     }
 
 }
 
 
-let handleCallback = function (message) {
-    let checkout_form = jQuery('form[name="checkout"]');
-    try {
-        checkout_form.append('<input type="hidden" value="' + message.token + '" name="everypayToken">');
-        modal.destroy();
-        checkout_form.submit();
-    } catch(err){
-        checkout_form.find('#place_order').trigger('click');
-    }   
-};

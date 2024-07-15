@@ -119,47 +119,62 @@ class WC_Everypay_Api
      * @param  string $method
      * @return array
      */
-    private static function request(string $url, array $params = array(), string $method = 'POST')
-    {
-        $apiKey = self::getApiKey();
+	private static function request(string $url, array $params = array(), string $method = 'POST')
+	{
+		$apiKey = self::getApiKey();
 
-        if (!$apiKey) {
-        	throw new Exception('api secret key is missing');
-        }
+		if (!$apiKey) {
+			throw new Exception('api secret key is missing');
+		}
+		$query = http_build_query($params, null, '&');
+		$curl   = curl_init();
+		curl_setopt($curl, CURLOPT_TIMEOUT, 30);
+		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, strtoupper($method));
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+			'User-Agent: EveryPay Internal PHP Library'
+		));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 
-        $query = http_build_query($params, null, '&');
-        $api_response = wp_remote_request(
-            $url,
-            array(
-                'method'  => $method,
-                'headers' => array(
-                    'User-Agent' => 'EveryPay Woocommerce',
-                    'Authorization' => 'Basic ' . base64_encode( $apiKey . ':')
-                ),
-                'body'    => $query,
-                'timeout' => 50
-            )
-        );
+		curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($curl, CURLOPT_USERPWD, $apiKey . ':');
 
-        if (is_wp_error($api_response)) {
-	        throw new Exception($api_response->get_error_message(). ' '. $query);
-        }
+		if (!empty($params)) {
+			$query = http_build_query($params, null, '&');
+			if ('get' === strtolower($method)) {
+				$url .= (false === strpos($url, '?')) ? '?' : '&';
+				$url .= $query;
+			} else {
+				curl_setopt($curl, CURLOPT_POSTFIELDS, $query);
+			}
+		}
 
-        $response = array();
-        if (empty($api_response['body']) ) {
-			throw new Exception('response body from api is empty.'. ' '. $query);
-        }
+		curl_setopt($curl, CURLOPT_URL, $url);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		$result   = curl_exec($curl);
+		$info     = curl_getinfo($curl);
 
-        if (wp_remote_retrieve_header($api_response, 'content-type') != 'application/json') {
+		$response = array();
+
+		if (curl_errno($curl)) {
+			$curlError = curl_error($curl);
+			throw new Exception($curlError);
+		}
+
+		if (stripos($info['content_type'], 'application/json') === false) {
 			throw new Exception('content type is not application/json'. ' '. $query);
-        }
-        $response['status'] = wp_remote_retrieve_response_code($api_response);
-        $response['body'] = json_decode(wp_remote_retrieve_body($api_response), true);
+		}
 
-        if (isset($response['body']['error'])) {
-            throw new Exception($response['body']['error']['message']. ' '. $query);
-        }
+		$response['status'] = $info['http_code'];
+		$response['body']   = json_decode($result, true);
 
-        return $response;
-    }
+		if (!isset($response['body']) || empty($response['body'])) {
+			throw new Exception('response body is empty. '.$query);
+		}
+
+		if (isset($response['body']['error'])) {
+			throw new Exception($response['body']['error']['message']. ' '. $query);
+		}
+
+		return $response;
+	}
 }

@@ -18,16 +18,29 @@ class WC_Everypay_Renderer
 
 	public function render_iframe($amount, $max_installments)
 	{
-		global  $current_user;
-		$billing_address = get_user_meta( $current_user->ID, 'billing_address_1', true );
-		$total = $this->helpers->format_amount($amount);
+		global $current_user;
+		$billing_address = get_user_meta($current_user->ID, 'billing_address_1', true );
+        $billing_email = get_user_meta($current_user->ID, 'billing_email', true);
+        $billing_phone = get_user_meta($current_user->ID, 'billing_phone', true);
+
+//        error_log("######". json_encode($billing_email). PHP_EOL, 3, 'loggy3.log');
+        if (empty($billing_email) && is_user_logged_in()) {
+            $user_data = get_userdata($current_user->ID);
+            $billing_email = $user_data->user_email;
+//            error_log("######". json_encode($user_data ). PHP_EOL, 3, 'loggy2.log');
+        }
+
+        $total = $this->helpers->format_amount($amount);
+        // @note
 
 		$EVDATA = array(
 			'amount' => $total,
 			'pk' => $this->public_key,
 			'max_installments' => $this->helpers->calculate_installments($total, $max_installments),
 			'locale' => $this->locale,
-			'billing_address' => $billing_address
+			'billing_address' => $billing_address,
+			'email' => $billing_email,
+			'phone' => $billing_phone,
 		);
 
 		if ($_POST['tokenized-card'] ) {
