@@ -43,11 +43,11 @@ class WC_Everypay_Renderer
 			'phone' => $billing_phone,
 		);
 
-		if ($_POST['tokenized-card'] ) {
+		if (!empty($_POST['tokenized-card'])) {
 			$EVDATA['tokenized'] = true;
 		}
 
-		if ($this->tokenization_status == 'yes' && is_user_logged_in() && !$_POST['tokenized-card']) {
+		if ($this->tokenization_status == 'yes' && is_user_logged_in() && empty($_POST['tokenized-card'])) {
 			$EVDATA['save_cards'] = true;
 		}
 
