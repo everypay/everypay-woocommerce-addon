@@ -126,7 +126,7 @@ class WC_Everypay_Api
 		if (!$apiKey) {
 			throw new Exception('api secret key is missing');
 		}
-		$query = http_build_query($params, null, '&');
+        $query = http_build_query($params, '', '&');
 		$curl   = curl_init();
 		curl_setopt($curl, CURLOPT_TIMEOUT, 30);
 		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, strtoupper($method));
@@ -139,7 +139,7 @@ class WC_Everypay_Api
 		curl_setopt($curl, CURLOPT_USERPWD, $apiKey . ':');
 
 		if (!empty($params)) {
-			$query = http_build_query($params, null, '&');
+			$query = http_build_query($params, '', '&');
 			if ('get' === strtolower($method)) {
 				$url .= (false === strpos($url, '?')) ? '?' : '&';
 				$url .= $query;

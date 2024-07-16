@@ -23,12 +23,12 @@ class WC_Everypay_Renderer
         $billing_email = get_user_meta($current_user->ID, 'billing_email', true);
         $billing_phone = get_user_meta($current_user->ID, 'billing_phone', true);
 
-//        error_log("######". json_encode($billing_email). PHP_EOL, 3, 'loggy3.log');
-        if (empty($billing_email) && is_user_logged_in()) {
-            $user_data = get_userdata($current_user->ID);
-            $billing_email = $user_data->user_email;
-//            error_log("######". json_encode($user_data ). PHP_EOL, 3, 'loggy2.log');
-        }
+
+		// @note
+        // if (empty($billing_email) && is_user_logged_in()) {
+        //     $user_data = get_userdata($current_user->ID);
+        //     $billing_email = $user_data->user_email;
+        // }
 
         $total = $this->helpers->format_amount($amount);
         // @note

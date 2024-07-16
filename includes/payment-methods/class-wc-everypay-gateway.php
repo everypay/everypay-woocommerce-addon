@@ -108,17 +108,6 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
                 $amount,
                 $this->max_installments
         );
-//        @note
-       error_log(
-               json_encode([
-                   'description' => $description,
-                   'amount' => $amount,
-                   'payee_email' => $billing_email,
-                   'payee_phone' => $billing_phone,
-                   'token' => $token,
-                   'max_installments' => $installments]
-       )
-               .PHP_EOL, 3, __DIR__.'/loggy1.log');
 
 	    return array(
 		    'description' => $description,
@@ -193,7 +182,7 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 
 	    $wc_order->add_order_note('Everypay payment completed at-' .$timestamp);
 	    $wc_order->payment_complete();
-	    $wc_order->get_order();
+	    $wc_order->get_order(); // @note
 	    WC()->cart->empty_cart();
 
 	   return array(
