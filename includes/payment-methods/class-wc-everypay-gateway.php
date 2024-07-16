@@ -94,9 +94,9 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 
     private function create_payload($wc_order, $token)
     {
-	    $amount = $this->helpers->format_amount($wc_order->order_total);
-        $billing_email = $wc_order->billing_email;
-        $billing_phone = $wc_order->billing_phone;
+	    $amount = $this->helpers->format_amount($wc_order->get_total());
+        $billing_email = $wc_order->get_billing_email();
+        $billing_phone = $wc_order->get_billing_phone();
 	    $description = get_bloginfo('name') . ' / '
 	                   . 'Order' . ' #' . $wc_order->get_order_number() . ' - '
 	                   . number_format($amount/100, 2, ',', '.') . '€';
