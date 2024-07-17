@@ -2,9 +2,9 @@
 
 Tags: everypay, 3ds, credit card, debit card, payment gateway, payments, payment request, woocommerce, store, sales, sell, shop, shopping, cart, checkout,ecommerce, e-commerce, commerce
 Requires at least: 4.0
-Tested up to: 5.7
+Tested up to: 6.6
 Requires PHP: 7.0
-Stable tag: 3.5
+Stable tag: trunk
 License: http://www.gnu.org/licenses/gpl-2.0.html
 Author: Everypay S.A.
 Author URI: https://everypay.gr

@@ -20,15 +20,8 @@ class WC_Everypay_Renderer
 	{
 		global $current_user;
 		$billing_address = get_user_meta($current_user->ID, 'billing_address_1', true );
-        $billing_email = get_user_meta($current_user->ID, 'billing_email', true);
-        $billing_phone = get_user_meta($current_user->ID, 'billing_phone', true);
-
-
-		// @note
-        // if (empty($billing_email) && is_user_logged_in()) {
-        //     $user_data = get_userdata($current_user->ID);
-        //     $billing_email = $user_data->user_email;
-        // }
+		$billing_email = get_user_meta($current_user->ID, 'billing_email', true);
+		$billing_phone = get_user_meta($current_user->ID, 'billing_phone', true);
 
         $total = $this->helpers->format_amount($amount);
         // @note
@@ -42,7 +35,7 @@ class WC_Everypay_Renderer
 			'email' => $billing_email,
 			'phone' => $billing_phone,
 		);
-
+		// @note
 		if (!empty($_POST['tokenized-card'])) {
 			$EVDATA['tokenized'] = true;
 		}
