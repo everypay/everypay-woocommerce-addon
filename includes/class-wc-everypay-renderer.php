@@ -18,10 +18,15 @@ class WC_Everypay_Renderer
 
 	public function render_iframe($amount, $max_installments)
 	{
-		global $current_user;
-		$billing_address = get_user_meta($current_user->ID, 'billing_address_1', true );
-		$billing_email = get_user_meta($current_user->ID, 'billing_email', true);
-		$billing_phone = get_user_meta($current_user->ID, 'billing_phone', true);
+		// global $current_user;
+		// $billing_address = get_user_meta($current_user->ID, 'billing_address_1', true );
+		// $billing_email = get_user_meta($current_user->ID, 'billing_email', true);
+		// $billing_phone = get_user_meta($current_user->ID, 'billing_phone', true);
+
+        // @note support for guest checkout
+    	$billing_address = WC()->customer->get_billing_address();
+    	$billing_email = WC()->customer->get_billing_email();
+    	$billing_phone = WC()->customer->get_billing_phone();
 
         $total = $this->helpers->format_amount($amount);
         // @note
