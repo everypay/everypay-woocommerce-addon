@@ -148,12 +148,12 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 				(new WC_Everypay_Repository())->save_logs('tokenization_payment', implode(" ", $payload));
 				$user_id = $wc_order->get_user_id();
 				$everypay_tokenization = new WC_Everypay_Tokenization();
-				$everypay_tokenization->process_tokenized_payment($user_id, $payload);
+				$response = $everypay_tokenization->process_tokenized_payment($user_id, $payload);
 			} else {
 				(new WC_Everypay_Repository())->save_logs('payment', implode(" ", $payload));
-				WC_Everypay_Api::addPayment($payload);
+				$response = WC_Everypay_Api::addPayment($payload);
 			}
-			return $this->complete_order($wc_order);
+			return $this->complete_order($wc_order, $response['body']['token']);
 		} catch (Exception $e) {
 
 			$error = 'An error occurred. Please try again.';
@@ -172,12 +172,13 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 		}
 	}
 
-	private function complete_order($wc_order)
+	private function complete_order($wc_order, $token)
 	{
 		$dt = new DateTime("Now");
 		$timestamp = $dt->format('Y-m-d H:i:s e');
 
 		$wc_order->add_order_note('Everypay payment completed at-' . $timestamp);
+        $wc_order->update_meta_data('token', $token);
 		$wc_order->payment_complete();
 		$wc_order->get_order(); // @note
 		WC()->cart->empty_cart();
