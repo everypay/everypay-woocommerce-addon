@@ -148,8 +148,10 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 				(new WC_Everypay_Repository())->save_logs('tokenization_payment', implode(" ", $payload));
 				$user_id = $wc_order->get_user_id();
 				$everypay_tokenization = new WC_Everypay_Tokenization();
+//                @note
 				$response = $everypay_tokenization->process_tokenized_payment($user_id, $payload);
 			} else {
+//                @note
 				(new WC_Everypay_Repository())->save_logs('payment', implode(" ", $payload));
 				$response = WC_Everypay_Api::addPayment($payload);
 			}
@@ -178,8 +180,9 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 		$timestamp = $dt->format('Y-m-d H:i:s e');
 
 		$wc_order->add_order_note('Everypay payment completed at-' . $timestamp);
+//        @note
         $wc_order->update_meta_data('token', $token);
-		$wc_order->payment_complete();
+        $wc_order->payment_complete();
 		$wc_order->get_order(); // @note
 		WC()->cart->empty_cart();
 
