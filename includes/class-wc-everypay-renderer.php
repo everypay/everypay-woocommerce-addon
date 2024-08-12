@@ -18,11 +18,11 @@ class WC_Everypay_Renderer
 
 	public function render_iframe($amount, $max_installments)
 	{
-    	$billing_address = WC()->customer->get_billing_address();
-    	$billing_email = WC()->customer->get_billing_email();
-    	$billing_phone = WC()->customer->get_billing_phone();
+		$billing_address = WC()->customer->get_billing_address();
+		$billing_email = WC()->customer->get_billing_email();
+		$billing_phone = WC()->customer->get_billing_phone();
 
-        $total = $this->helpers->format_amount($amount);
+		$total = $this->helpers->format_amount($amount);
 
 		$EVDATA = array(
 			'amount' => $total,
