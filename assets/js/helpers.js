@@ -19,7 +19,7 @@ var create_payload = function(everypayData) {
             },
         }
     }
-// @note
+
     if (everypayData.phone && typeof everypayData.phone === 'string') {
         payload.data = {
             ...payload.data,

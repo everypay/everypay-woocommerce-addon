@@ -61,8 +61,6 @@ function checkIfTokenizedCardHasTheRequiredFields(tokenizedCard) {
 function load_everypay() {
     modal.show_loading();
     var payload = create_payload(EVDATA);
-    // @note
-    console.log('check', {payload})
     if (!payload) {
         alert("An error occurred. Please try again.");
         modal.hide_loading();
@@ -76,7 +74,6 @@ function load_everypay() {
             return;
         }
 
-        // @note fix to send billing with tokenized card
         payload.data = {
             ...payload.data,
             cardToken: tokenized_card.getAttribute('crd'),
