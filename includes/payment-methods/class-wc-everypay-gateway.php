@@ -230,8 +230,8 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 				'description' => $reason
 			);
 
-            $wc_order = new WC_Order($order_id);
-            $token = $wc_order->get_meta('token');
+ 			$wc_order = new WC_Order($order_id);
+ 			$token = $wc_order->get_meta('token');
 
 			WC_Everypay_Api::setApiKey($this->everypaySecretKey);
 			$refund = WC_Everypay_Api::refundPayment($token, $params);
