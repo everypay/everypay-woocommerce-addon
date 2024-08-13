@@ -230,7 +230,8 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 				'description' => $reason
 			);
 
-			$token = get_post_meta((int) $order_id, 'token', true);
+            $wc_order = new WC_Order($order_id);
+            $token = $wc_order->get_meta('token');
 
 			WC_Everypay_Api::setApiKey($this->everypaySecretKey);
 			$refund = WC_Everypay_Api::refundPayment($token, $params);
@@ -239,7 +240,6 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 			$timestamp = $dt->format('Y-m-d H:i:s e');
 			$refToken = $refund['body']['token'];
 
-			$wc_order = new WC_Order($order_id);
 			$wc_order->add_order_note('Everypay Refund completed at-' . $timestamp . '-with Refund Token=' . $refToken);
 
 			return true;
