@@ -4,7 +4,7 @@ Tags: everypay, 3ds, credit card, debit card, payment gateway, payments, payment
 Requires at least: 4.0
 Tested up to: 6.6
 Requires PHP: 7.0
-Stable tag: trunk
+Stable tag: 3.5
 License: http://www.gnu.org/licenses/gpl-2.0.html
 Author: Everypay S.A.
 Author URI: https://everypay.gr
