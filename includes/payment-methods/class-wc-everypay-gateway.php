@@ -178,7 +178,7 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 		$timestamp = $dt->format('Y-m-d H:i:s e');
 
 		$wc_order->add_order_note('Everypay payment completed at-' . $timestamp);
-        $wc_order->update_meta_data('token', $token);
+        $wc_order->update_meta_data('everypay_payment_token', $token);
         $wc_order->payment_complete();
 		$wc_order->get_order();
 		WC()->cart->empty_cart();
@@ -231,7 +231,7 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 			);
 
  			$wc_order = new WC_Order($order_id);
- 			$token = $wc_order->get_meta('token');
+ 			$token = $wc_order->get_meta('everypay_payment_token');
 
 			WC_Everypay_Api::setApiKey($this->everypaySecretKey);
 			$refund = WC_Everypay_Api::refundPayment($token, $params);
