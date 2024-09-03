@@ -5,7 +5,8 @@ Requires at least: 4.0
 Tested up to: 6.6
 Requires PHP: 7.0
 Stable tag: 3.5
-License: http://www.gnu.org/licenses/gpl-2.0.html
+License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Author: Everypay S.A.
 Author URI: https://everypay.gr
 
