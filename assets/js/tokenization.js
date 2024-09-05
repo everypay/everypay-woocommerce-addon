@@ -1,8 +1,8 @@
 
 
-let deleteCard = (element) => {
-    let card = element.parentElement.querySelector('input[name="tokenized-card"]');
-    let checkout_form = jQuery('form.woocommerce-checkout #customer_details div .woocommerce-billing-fields');
+var deleteCard = function(element) {
+    var card = element.parentElement.querySelector('input[name="tokenized-card"]');
+    var checkout_form = jQuery('form.woocommerce-checkout #customer_details div .woocommerce-billing-fields');
     if (!card || !card.value || !checkout_form) {
         return;
     }
@@ -11,7 +11,7 @@ let deleteCard = (element) => {
         return;
     }
 
-    let checkout_input = document.createElement('input');
+    var checkout_input = document.createElement('input');
     checkout_input.setAttribute('name', 'delete_card');
     checkout_input.innerHTML = card.value;
     checkout_form.append('<input type="hidden" value="' +card.value +'" name="delete_card" />');

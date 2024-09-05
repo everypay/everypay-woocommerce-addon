@@ -18,8 +18,10 @@ class WC_Everypay_Renderer
 
 	public function render_iframe($amount, $max_installments)
 	{
-		global  $current_user;
-		$billing_address = get_user_meta( $current_user->ID, 'billing_address_1', true );
+		$billing_address = WC()->customer->get_billing_address();
+		$billing_email = WC()->customer->get_billing_email();
+		$billing_phone = WC()->customer->get_billing_phone();
+
 		$total = $this->helpers->format_amount($amount);
 
 		$EVDATA = array(
@@ -27,14 +29,16 @@ class WC_Everypay_Renderer
 			'pk' => $this->public_key,
 			'max_installments' => $this->helpers->calculate_installments($total, $max_installments),
 			'locale' => $this->locale,
-			'billing_address' => $billing_address
+			'billing_address' => $billing_address,
+			'email' => $billing_email,
+			'phone' => $billing_phone,
 		);
 
-		if ($_POST['tokenized-card'] ) {
+		if (!empty($_POST['tokenized-card'])) {
 			$EVDATA['tokenized'] = true;
 		}
 
-		if ($this->tokenization_status == 'yes' && is_user_logged_in() && !$_POST['tokenized-card']) {
+		if ($this->tokenization_status == 'yes' && is_user_logged_in() && empty($_POST['tokenized-card'])) {
 			$EVDATA['save_cards'] = true;
 		}
 
