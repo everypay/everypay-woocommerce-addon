@@ -9,10 +9,9 @@
     top: 0;
     min-width: 100%;
     min-height: 100%;
-    height: 100%;
     overflow: hidden;
     background-color: rgb(0,0,0);
-    background-color: rgba(0,0,0,0.9);
+    background-color: rgba(40, 40, 40, 0.97);
 }
 #everypay-modal-content {
     display: flex;
@@ -20,9 +19,8 @@
     background-color: #fefefe;
     padding: 0;
     border: 1px solid #888;
-    min-width: 35vw;
-    max-width: 35vw;
-    min-height: 370px !important;
+    min-width: 40vw;
+    min-height: 430px !important;
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
     -webkit-animation-name: everypayModalAnimation;
     -webkit-animation-duration: 0.4s;
@@ -59,8 +57,25 @@
 }
 #pay-form {
     min-width: 100%;
-    min-height: 100%;
+    min-height: 90% !important;
 }
+
+#everypay-save-card-box {
+    align-self: center;
+    display: flex;
+    column-gap: 4px;
+    align-items: center;
+    margin-bottom: 1vw;
+}
+
+#everypay-save-card-box label {
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    font-weight: bold;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.87);
+    margin-bottom: 0;
+}
+
 #everypay-logo {
     display: flex;
     min-width: 35vw;
@@ -68,7 +83,10 @@
     justify-content: center;
     align-items: center;
     color: #fff;
+    /*
     margin: 5vh 0;
+    */
+    margin-bottom: 5vh;
 }
 #everypay-logo svg {
     margin-left: 1.2vw;
@@ -102,6 +120,7 @@
         max-width: 6vw;
         height: 80%;
     }
+
     #everypay-logo {
         margin-top: 5vh;
         margin-bottom: 2vh;
@@ -124,15 +143,22 @@
 /* large screens */
 @media screen and (min-width: 1900px) {
     #everypay-modal-content {
-        min-width: 20vw;
-        max-width: 20vw;
+        min-width: 18vw;
+    }
+    #everypay-save-card-box {
+        margin-bottom: 1vh !important;
     }
     #everypay-logo {
-        height: 5vh;
+        height: 6vh;
+    }
+    #everypay-logo svg {
+        min-width: 5vw;
+        max-width: 5vw;
     }
     #everypay-secure-logos  {
         min-width: 20vw;
         max-width: 20vw;
+        height: 5%;
     }
     #everypay-secure-logos svg {
         min-width: 6vw;

@@ -79,18 +79,6 @@ class WC_Everypay_Api
         return self::$apiEndPoint;
     }
 
-    /**
-     * Create a new customer.
-     *
-     * @param  array $params
-     * @return array
-     */
-    public static function createCustomer(array $params)
-    {
-        $url = self::getApiEndPoint() . '/customers';
-
-        return self::request($url, $params);
-    }
 
     /**
      * Refund the provided payment.
@@ -134,42 +122,57 @@ class WC_Everypay_Api
     private static function request(string $url, array $params = array(), string $method = 'POST')
     {
         $apiKey = self::getApiKey();
-        $query = http_build_query($params, null, '&');
 
-        $api_response = wp_remote_post(
-            $url,
-            array(
-                'method'  => $method,
-                'headers' => array(
-                    'User-Agent' => 'EveryPay Woocommerce Plugin',
-                    'Authorization' => 'Basic ' . base64_encode( $apiKey . ':')
-                ),
-                'body'    => $query,
-                'timeout' => 30,
-                'sslverify' => false,
-            )
-        );
+        if (!$apiKey) {
+            throw new Exception('api secret key is missing');
+        }
+        $query = http_build_query($params, '', '&');
+        $curl   = curl_init();
+        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
+        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, strtoupper($method));
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+            'User-Agent: EveryPay Internal PHP Library'
+        ));
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+
+        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        curl_setopt($curl, CURLOPT_USERPWD, $apiKey . ':');
+
+        if (!empty($params)) {
+            $query = http_build_query($params, '', '&');
+            if ('get' === strtolower($method)) {
+                $url .= (false === strpos($url, '?')) ? '?' : '&';
+                $url .= $query;
+            } else {
+                curl_setopt($curl, CURLOPT_POSTFIELDS, $query);
+            }
+        }
+
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        $result   = curl_exec($curl);
+        $info     = curl_getinfo($curl);
+
         $response = array();
 
-        if ( is_wp_error($api_response) || empty($api_response['body']) ) {
-            $response['status'] = 500;
-            $response['body']['error']['message'] = 'A problem occurred with the payment. Please try again.';
-            return $response;
+        if (curl_errno($curl)) {
+            $curlError = curl_error($curl);
+            throw new Exception($curlError);
         }
 
-        if (wp_remote_retrieve_header($api_response, 'content-type') != 'application/json') {
-            $response['status'] = 500;
-            $message = 'The returned curl response is not in json format';
-            $response['body']['error']['message'] = $message;
-            return $response;
+        if (stripos($info['content_type'], 'application/json') === false) {
+            throw new Exception('content type is not application/json' . ' ' . $query);
         }
 
-        $response['status'] = wp_remote_retrieve_response_code($api_response);
-        $response['body'] = json_decode(wp_remote_retrieve_body($api_response), true);
+        $response['status'] = $info['http_code'];
+        $response['body']   = json_decode($result, true);
+
+        if (!isset($response['body']) || empty($response['body'])) {
+            throw new Exception('response body is empty. ' . $query);
+        }
 
         if (isset($response['body']['error'])) {
-            $response['status'] = 500;
-            $response['body']['error']['message'] = pll__('An error with the payment occurred. Please try again.');
+            throw new Exception($response['body']['error']['message'] . ' ' . $query);
         }
 
         return $response;

@@ -1,69 +1,95 @@
+var meta = document.createElement('meta');
+meta.httpEquiv = "X-UA-Compatible";
+meta.content = "IE=edge";
+document.getElementsByTagName('head')[0].appendChild(meta);
 var EVDATA;
+var modal = new EverypayModal(EVDATA);
 
-var calculate_installments = function (max_installments) {
-    var installments = [];
-    var y = 2;
-    for (let i = 2; i <= max_installments; i += y) {
-        if (i >= 12)
-            y = 12;
+var payformResponseHandler = function(response) {
 
-        installments.push(i);
+    if (response && response.response && response.response === 'success') {
+
+        if (modal) {
+            modal.destroy();
+            modal.show_loading();
+            setTimeout(function () {
+                modal.hide_loading();
+            }, 4000);
+        }
+        if (document.querySelector('input[name="everypayToken"]')) {
+            document.querySelector('input[name="everypayToken"]').remove();
+        }
+
+        var checkout_form = document.querySelector('form[name="checkout"]');
+        var placeOrderButton = document.querySelector("#place_order");
+        if (checkout_form && placeOrderButton
+        ) {
+            var tokenInput = document.createElement('input');
+            tokenInput.setAttribute('type', 'hidden');
+            tokenInput.setAttribute('id', 'everypayTokenInput');
+            tokenInput.setAttribute('name', 'everypayToken');
+            tokenInput.setAttribute('value', response.token);
+            checkout_form.appendChild(tokenInput);
+            setTimeout(function() {
+                placeOrderButton.click();
+            }, 350);
+        }
+
     }
-    return installments;
-}
 
-let modal = new EverypayModal();
+    if (response.onLoad == true) {
+        if (EVDATA.save_cards) {
+            modal.show_save_card();
+        }
+        modal.hide_loading();
+        modal.open();
+    }
+};
+
+function checkIfTokenizedCardHasTheRequiredFields(tokenizedCard) {
+    if (!tokenizedCard.hasAttribute('crd') ||
+        !tokenizedCard.hasAttribute('card_type') ||
+        !tokenizedCard.hasAttribute('exp_month') ||
+        !tokenizedCard.hasAttribute('exp_year') ||
+        !tokenizedCard.hasAttribute('last_four')
+    ) {
+        return false;
+    }
+    return true;
+}
 
 function load_everypay() {
-    enableEverypayLoadingScreen();
-
-    var payload = {
-        pk: EVDATA.pk,
-        amount: EVDATA.amount,
-        locale: EVDATA.locale,
-        data: {
-            billing: {
-                addressLine1: EVDATA.billing_address
-            }
-        },
-        txnType: 'tds',
-        theme:'default',
-    formOptions: {},
-    inputOptions: {},
-    errorOptions: {}
-};
-
-    if (EVDATA.max_installments)
-        payload.installments = calculate_installments(EVDATA.max_installments);
-
-    function handleResponse(api) {
-        if (api.response === 'success') {
-            handleCallback(api)
-        }
-
-        if (api.onLoad == true) {
-            closeEverypayLoadingScreen();
-            modal.open()
-        }
+    modal.show_loading();
+    var payload = create_payload(EVDATA);
+    if (!payload) {
+        alert("An error occurred. Please try again.");
+        modal.hide_loading();
+        return;
     }
-    everypay.payform(payload, handleResponse);
+    if (EVDATA.tokenized) {
+        var tokenized_card = document.querySelector('input[name="tokenized-card"]:checked');
+        if (!tokenized_card || !checkIfTokenizedCardHasTheRequiredFields(tokenized_card)) {
+            alert("An error occurred. Please try again.");
+            modal.hide_loading();
+            return;
+        }
+
+        payload.data = {
+            ...payload.data,
+            cardToken: tokenized_card.getAttribute('crd'),
+            cardType: tokenized_card.getAttribute('card_type'),
+            cardExpMonth: tokenized_card.getAttribute('exp_month'),
+            cardExpYear: tokenized_card.getAttribute('exp_year'),
+            cardLastFour: tokenized_card.getAttribute('last_four')
+        };
+        if (document.getElementById('everypay-save-card-box')) {
+            document.getElementById('everypay-save-card-box').remove();
+        }
+        everypay.tokenized(payload, payformResponseHandler);
+    } else{
+        everypay.payform(payload, payformResponseHandler);
+    }
+
 }
 
 
-handleCallback = function (message) {
-    var checkout_form = jQuery('form[name="checkout"]');
-
-    checkout_form.append('<input type="hidden" value="' + message.token + '" name="everypayToken">');
-
-    try{
-        modal.destroy();
-        checkout_form.submit();
-    } catch(err){
-        checkout_form.find('#place_order').trigger('click');
-    }   
-};
-
-(function( $ ) {
-    "use strict";
-    $('body').on('change', 'input[name="payment_method"]', function() { $('body').trigger('update_checkout'); });
-})(jQuery);

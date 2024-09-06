@@ -3,7 +3,7 @@
  * Plugin Name: EveryPay Payment Gateway for WooCommerce
  * Plugin URI: https://wordpress.org/plugins/everypay-woocommerce-addon/
  * Description: This plugin adds a payment option in WooCommerce for customers to pay with their Credit Cards Via Everypay.
- * Version: 2
+ * Version: 3.6
  * Author: Everypay S.A.
  * Author URI: https://everypay.gr
  * License: GPL2
@@ -50,9 +50,13 @@ function everypay_init()
             define('EVERYPAY_JS_URL', plugins_url('assets/js/', __FILE__));
             define('EVERYPAY_CSS_URL', plugins_url('assets/css/', __FILE__));
 
-            require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-global-checks.php";
+	        require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-helpers.php";
             require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-api.php";
-            require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-everypay-gateway.php';
+	        require_once dirname( __FILE__ ) . '/includes/class-wc-everypay-renderer.php';
+	        require_once dirname( __FILE__ ) . '/includes/admin/class-wc-everypay-admin.php';
+	        require_once dirname( __FILE__ ) . '/includes/class-wc-everypay-repository.php';
+	        require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-everypay-gateway.php';
+            require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-everypay-tokenization.php';
 
         }
 
@@ -64,13 +68,22 @@ function everypay_init()
 
 include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 
-if(!is_plugin_active( 'theme-translation-for-polylang/polylang-theme-translation.php' ) ) {
-	function pll__($string){
-		return __($string, 'woocommerce');
-	}
-	function pll_e($string){
-		echo __($string, 'woocommerce');
-	}
-}
 
 add_action('plugins_loaded', 'everypay_init');
+
+function install() {
+    require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-repository.php";
+    $repository = new WC_Everypay_Repository();
+	$repository->create_tokenization_table();
+	$repository->create_logging_table();
+}
+
+function uninstall() {
+	require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-repository.php";
+	$repository = new WC_Everypay_Repository();
+	$repository->drop_tokenization_table();
+	$repository->drop_logging_table();
+}
+
+register_activation_hook( __FILE__, 'install' );
+register_deactivation_hook( __FILE__, 'uninstall' );

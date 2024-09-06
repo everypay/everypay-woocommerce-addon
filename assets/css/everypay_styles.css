@@ -1,3 +1,12 @@
+#everypay-max_installments-table table{border:none}
+.remove-installment{font-size: 2em; text-decoration: none !important;color:#ee5f5b}
+#installment-table table{width:600px;background: white;}
+#everypay-max_installments-table table tr td,
+#everypay-max_installments-table table tr th{border:none;border-bottom:1px solid #f2f2f2}
+#everypay-max_installments-table{width:100%;max-width: 801px;background: #fff; padding:16px;}
+#everypay-max_installments-table table input[type="number"] {width: 99px;}
+
+
 .payment_method_everypay label img {
     min-width: 7vw;
     max-width: 7vw;
@@ -6,7 +15,7 @@
 
 @media only screen and (max-width: 767px) {
     .payment_method_everypay label img {
-        width: 30vw;
+        min-width: 30vw;
     }
 }
 @media screen and (min-width: 1900px) {
@@ -14,4 +23,29 @@
         min-width: 5vw;
         max-width: 5vw;
     }
+}
+
+
+#everypay_save_card  {
+    background-color: red;
+    margin-right: 0.5vw;
+}
+
+#card-container {
+    margin-bottom: 2vw;
+}
+
+.card-box {
+    margin: 1vw 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.delete-card-btn {
+    font-size: 1.8em;
+}
+.delete-card-btn:hover {
+    cursor: pointer;
 }
