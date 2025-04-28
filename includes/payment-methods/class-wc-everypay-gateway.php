@@ -100,10 +100,15 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 			. 'Order' . ' #' . $wc_order->get_order_number() . ' - '
 			. number_format($amount / 100, 2, ',', '.') . '€';
 
-		if (!$billing_email || !$billing_phone || !$description || !$token) {
-			throw new Exception('create_payload: invalid variable');
-		}
-		$installments = $this->helpers->calculate_installments(
+        if (
+            (!$billing_email && !$billing_phone)
+            || !$description
+            || !$token
+        ) {
+            throw new Exception('create_payload: invalid variable');
+        }
+
+        $installments = $this->helpers->calculate_installments(
 			$amount,
 			$this->max_installments
 		);
