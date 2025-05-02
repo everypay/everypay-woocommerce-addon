@@ -3,6 +3,7 @@ var create_payload = function(everypayData) {
    var payload = {
         pk: everypayData.pk,
         amount: everypayData.amount,
+        iframeSource: "Woocommerce CMS",
         display: {
             staticCardPlaceholder: true
         }
