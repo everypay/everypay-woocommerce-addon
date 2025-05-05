@@ -1,0 +1,11 @@
+#googlepay-warning {
+    display: none;
+}
+
+tr:has(label[for="woocommerce_everypay_everypay_googlepay_country_code"]),
+tr:has(label[for="woocommerce_everypay_everypay_googlepay_merchant_name"]),
+tr:has(label[for="woocommerce_everypay_everypay_googlepay_merchant_url"]),
+tr:has(label[for="woocommerce_everypay_everypay_googlepay_allowed_card_networks"]),
+tr:has(label[for="woocommerce_everypay_everypay_googlepay_allowed_auth_methods"]) {
+    display: none;
+}

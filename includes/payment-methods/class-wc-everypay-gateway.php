@@ -49,7 +49,19 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 	 */
 	private $locale;
 
-	public function __construct()
+    private $isGooglePayEnabled;
+
+    private $googlePayCountryCode;
+
+    private $googlePayMerchantName;
+
+    private $googlePayMerchantUrl;
+
+    private $googlePayAllowedCardNetworks;
+
+    private $googlePayAllowedAuthMethods;
+
+    public function __construct()
 	{
 		$this->id = 'everypay';
 		$this->icon = apply_filters('woocommerce_everypay_icon', EVERYPAY_IMAGES_URL . '/everypay.png');
@@ -68,8 +80,25 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 		$this->tokenization_status = $this->get_option('everypay_tokenization');
 		$this->everypay_sandbox = $this->get_option('everypay_sandbox');
 
-		$this->helpers = new WC_Everypay_Helpers();
-		$this->renderer = new WC_Everypay_Renderer($this->helpers, $this->everypayPublicKey, $this->tokenization_status);
+        $this->isGooglePayEnabled = $this->get_option('everypay_googlepay_enabled');
+        $this->googlePayCountryCode = $this->get_option('everypay_googlepay_country_code');
+        $this->googlePayMerchantName = $this->get_option('everypay_googlepay_merchant_name');
+        $this->googlePayMerchantUrl = $this->get_option('everypay_googlepay_merchant_url');
+        $this->googlePayAllowedCardNetworks = $this->get_option('everypay_googlepay_allowed_card_networks');
+        $this->googlePayAllowedAuthMethods = $this->get_option('everypay_googlepay_allowed_auth_methods');
+
+        $this->helpers = new WC_Everypay_Helpers();
+        $this->renderer = new WC_Everypay_Renderer($this->helpers, $this->everypayPublicKey, $this->tokenization_status);
+
+        if ($this->isGooglePayEnabled == 'yes') {
+            $this->renderer->setGooglePay(
+                $this->googlePayCountryCode,
+                $this->googlePayMerchantName,
+                $this->googlePayMerchantUrl,
+                $this->googlePayAllowedCardNetworks,
+                $this->googlePayAllowedAuthMethods
+            );
+        }
 
 		if (!defined("EVERYPAY_SANDBOX")) {
 			define("EVERYPAY_SANDBOX", $this->everypay_sandbox == 'yes');

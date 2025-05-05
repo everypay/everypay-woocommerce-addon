@@ -66,6 +66,11 @@ function load_everypay() {
         modal.hide_loading();
         return;
     }
+
+    if (Boolean(payload.googlePay)) {
+        payload.otherPaymentMethods.googlePay = payload.googlePay;
+    }
+
     if (EVDATA.tokenized) {
         var tokenized_card = document.querySelector('input[name="tokenized-card"]:checked');
         if (!tokenized_card || !checkIfTokenizedCardHasTheRequiredFields(tokenized_card)) {

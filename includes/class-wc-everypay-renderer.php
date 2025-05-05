@@ -7,6 +7,12 @@ class WC_Everypay_Renderer
     private $public_key;
     private $locale;
     private $tokenization_status;
+    private $isGooglePayEnabled;
+    private $googlePayCountryCode;
+    private $googlePayMerchantName;
+    private $googlePayMerchantUrl;
+    private $googlePayAllowedCardNetworks;
+    private $googlePayAllowedAuthMethods;
 
     public function __construct($helpers, $public_key, $tokenization_status)
     {
@@ -34,7 +40,17 @@ class WC_Everypay_Renderer
 			'phone' => $billing_phone,
 		);
 
-		if (!empty($_POST['tokenized-card'])) {
+        if ($this->isGooglePayEnabled) {
+            $EVDATA['googlePay'] = [
+                'countryCode' => $this->googlePayCountryCode,
+                'merchantName' => $this->googlePayMerchantName,
+                'merchantUrl' => $this->googlePayMerchantUrl,
+                'allowedCardNetworks' => explode(',', $this->googlePayAllowedCardNetworks),
+                'allowedAuthMethods' => explode(',', $this->googlePayAllowedAuthMethods),
+            ];
+        }
+
+        if (!empty($_POST['tokenized-card'])) {
 			$EVDATA['tokenized'] = true;
 		}
 
@@ -73,4 +89,19 @@ class WC_Everypay_Renderer
 		?> </div> <?php
 	}
 
+    public function setGooglePay(
+        string $countryCode,
+        string $merchantName,
+        string $merchantUrl,
+        string $allowedCardNetworks,
+        string $allowedAuthMethods
+    ): void
+    {
+        $this->isGooglePayEnabled = true;
+        $this->googlePayCountryCode = $countryCode;
+        $this->googlePayMerchantName = $merchantName;
+        $this->googlePayMerchantUrl = $merchantUrl;
+        $this->googlePayAllowedCardNetworks = $allowedCardNetworks;
+        $this->googlePayAllowedAuthMethods = $allowedAuthMethods;
+    }
 }
