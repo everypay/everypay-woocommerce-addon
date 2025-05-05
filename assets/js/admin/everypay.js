@@ -155,6 +155,18 @@ jQuery(document).ready(function ($) {
     //trigger init
     show_hide_extra_fees();
 
+    function toggleGooglePayFields() {
+        const enabled = $('#woocommerce_everypay_everypay_googlepay_enabled').is(':checked');
+        $('#googlepay-warning').toggle(enabled);
+        $('#woocommerce_everypay_everypay_googlepay_country_code').closest('tr').toggle(enabled);
+        $('#woocommerce_everypay_everypay_googlepay_merchant_name').closest('tr').toggle(enabled);
+        $('#woocommerce_everypay_everypay_googlepay_allowed_card_networks').closest('tr').toggle(enabled);
+        $('#woocommerce_everypay_everypay_googlepay_merchant_url').closest('tr').toggle(enabled);
+        $('#woocommerce_everypay_everypay_googlepay_allowed_auth_methods').closest('tr').toggle(enabled);
+    }
+
+    toggleGooglePayFields();
+    $('#woocommerce_everypay_everypay_googlepay_enabled').on('change', toggleGooglePayFields);
 
 });
 
