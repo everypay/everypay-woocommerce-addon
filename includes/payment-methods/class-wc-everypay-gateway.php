@@ -212,9 +212,10 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 		$timestamp = $dt->format('Y-m-d H:i:s e');
 
 		$wc_order->add_order_note('Everypay payment completed at-' . $timestamp);
+
 		$wc_order->update_meta_data('everypay_payment_token', $token);
 		$wc_order->payment_complete();
-		$wc_order->get_order();
+
 		WC()->cart->empty_cart();
 
 		return array(
