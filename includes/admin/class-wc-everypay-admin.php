@@ -15,15 +15,15 @@ class WC_Everypay_Admin
 		$this->secret_key = $secret_key;
 		add_action('admin_enqueue_scripts', array($this, 'load_admin_js'));
 		add_action('admin_notices', array($this, 'show_admin_notices'));
+		add_action('admin_enqueue_scripts', array($this, 'load_admin_css'));
 	}
-
 
 	/**
 	 * Show some notices on the admin
 	 */
 	public function show_admin_notices()
 	{
-		if (!current_user_can( 'manage_woocommerce' )) {
+		if (!current_user_can('manage_woocommerce')) {
 			return;
 		}
 
@@ -33,21 +33,29 @@ class WC_Everypay_Admin
 
 	}
 
+	public function load_admin_css()
+	{
+		if (isset($_GET['page']) && $_GET['page'] == 'wc-settings'
+			&& isset($_GET['tab']) && $_GET['tab'] == 'checkout'
+			&& isset($_GET['section']) && in_array($_GET['section'], array('wc_everypay_gateway', 'everypay'))) {
+			wp_register_style('everypay_admin_css', EVERYPAY_CSS_URL . 'admin/everypay_admin.css', [], EVERYPAY_PLUGIN_VERSION);
+			wp_enqueue_style('everypay_admin_css');
+		}
+	}
+
 	/**
 	 * The scripts on admin tab
 	 */
 	public function load_admin_js()
 	{
 		if (isset($_GET['page']) && $_GET['page'] == 'wc-settings'
-		    && isset($_GET['tab']) && $_GET['tab'] == 'checkout'
-		    && isset($_GET['section']) && in_array($_GET['section'], array('wc_everypay_gateway', 'everypay')))
-		{
-			wp_register_script('everypay_script1', EVERYPAY_JS_URL.'admin/mustache.min.js', array('jquery'), 'ver', true);
+			&& isset($_GET['tab']) && $_GET['tab'] == 'checkout'
+			&& isset($_GET['section']) && in_array($_GET['section'], array('wc_everypay_gateway', 'everypay'))) {
+			wp_register_script('everypay_script1', EVERYPAY_JS_URL . 'admin/mustache.min.js', array('jquery'), EVERYPAY_PLUGIN_VERSION, true);
 			wp_enqueue_script('everypay_script1');
 
-			wp_register_script('everypay_script2', EVERYPAY_JS_URL.'admin/everypay.js', array('jquery'), 'ver', true);
+			wp_register_script('everypay_script2', EVERYPAY_JS_URL . 'admin/everypay.js', array('jquery'), EVERYPAY_PLUGIN_VERSION, true);
 			wp_enqueue_script('everypay_script2');
 		}
 	}
-
 }

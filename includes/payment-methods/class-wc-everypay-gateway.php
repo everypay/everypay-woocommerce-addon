@@ -23,14 +23,14 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 	 * Sandbox mode status
 	 * @var string
 	 */
-	private  $everypay_sandbox;
+	private $everypay_sandbox;
 
 	/**
 	 * @var string
 	 */
 	private $max_installments;
 
-	private  $tokenization_status;
+	private $tokenization_status;
 
 	/**
 	 * Everypay helpers
@@ -48,6 +48,18 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 	 * @var string
 	 */
 	private $locale;
+
+	private $isGooglePayEnabled;
+
+	private $googlePayCountryCode;
+
+	private $googlePayMerchantName;
+
+	private $googlePayMerchantUrl;
+
+	private $googlePayAllowedCardNetworks;
+
+	private $googlePayAllowedAuthMethods;
 
 	public function __construct()
 	{
@@ -68,8 +80,25 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 		$this->tokenization_status = $this->get_option('everypay_tokenization');
 		$this->everypay_sandbox = $this->get_option('everypay_sandbox');
 
+		$this->isGooglePayEnabled = $this->get_option('everypay_googlepay_enabled');
+		$this->googlePayCountryCode = $this->get_option('everypay_googlepay_country_code');
+		$this->googlePayMerchantName = $this->get_option('everypay_googlepay_merchant_name');
+		$this->googlePayMerchantUrl = $this->get_option('everypay_googlepay_merchant_url');
+		$this->googlePayAllowedCardNetworks = $this->get_option('everypay_googlepay_allowed_card_networks');
+		$this->googlePayAllowedAuthMethods = $this->get_option('everypay_googlepay_allowed_auth_methods');
+
 		$this->helpers = new WC_Everypay_Helpers();
 		$this->renderer = new WC_Everypay_Renderer($this->helpers, $this->everypayPublicKey, $this->tokenization_status);
+
+		if ($this->isGooglePayEnabled == 'yes') {
+			$this->renderer->setGooglePay(
+				$this->googlePayCountryCode,
+				$this->googlePayMerchantName,
+				$this->googlePayMerchantUrl,
+				$this->googlePayAllowedCardNetworks,
+				$this->googlePayAllowedAuthMethods
+			);
+		}
 
 		if (!defined("EVERYPAY_SANDBOX")) {
 			define("EVERYPAY_SANDBOX", $this->everypay_sandbox == 'yes');
@@ -100,9 +129,14 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 			. 'Order' . ' #' . $wc_order->get_order_number() . ' - '
 			. number_format($amount / 100, 2, ',', '.') . '€';
 
-		if (!$billing_email || !$billing_phone || !$description || !$token) {
+		if (
+			(!$billing_email && !$billing_phone)
+			|| !$description
+			|| !$token
+		) {
 			throw new Exception('create_payload: invalid variable');
 		}
+
 		$installments = $this->helpers->calculate_installments(
 			$amount,
 			$this->max_installments
@@ -130,7 +164,7 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 				$user_id = get_current_user_id();
 				(new WC_Everypay_Tokenization())->delete_card($_POST['delete_card'], $user_id);
 				return array(
-					'result'   => 'success',
+					'result' => 'success',
 					'messages' => '<div class=""></div>'
 				);
 			}
@@ -178,8 +212,10 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 		$timestamp = $dt->format('Y-m-d H:i:s e');
 
 		$wc_order->add_order_note('Everypay payment completed at-' . $timestamp);
-        $wc_order->update_meta_data('everypay_payment_token', $token);
-        $wc_order->payment_complete();
+
+		$wc_order->update_meta_data('everypay_payment_token', $token);
+		$wc_order->payment_complete();
+
 		WC()->cart->empty_cart();
 
 		return array(
@@ -229,8 +265,8 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 				'description' => $reason
 			);
 
- 			$wc_order = new WC_Order($order_id);
- 			$token = $wc_order->get_meta('everypay_payment_token');
+			$wc_order = new WC_Order($order_id);
+			$token = $wc_order->get_meta('everypay_payment_token');
 
 			WC_Everypay_Api::setApiKey($this->everypaySecretKey);
 			$refund = WC_Everypay_Api::refundPayment($token, $params);
@@ -257,10 +293,10 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 			return;
 		}
 
-		wp_register_style('everypay_styles', EVERYPAY_CSS_URL . 'everypay_styles.css');
+		wp_register_style('everypay_styles', EVERYPAY_CSS_URL . 'everypay_styles.css', [], EVERYPAY_PLUGIN_VERSION);
 		wp_enqueue_style('everypay_styles');
 
-		wp_register_style('everypay_modal', EVERYPAY_CSS_URL . 'everypay_modal.css');
+		wp_register_style('everypay_modal', EVERYPAY_CSS_URL . 'everypay_modal.css', [], EVERYPAY_PLUGIN_VERSION);
 		wp_enqueue_style('everypay_modal');
 
 		if (EVERYPAY_SANDBOX) {
@@ -271,13 +307,13 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 
 		wp_enqueue_script('everypay_script');
 
-		wp_register_script('everypay_helpers', EVERYPAY_JS_URL . 'helpers.js');
+		wp_register_script('everypay_helpers', EVERYPAY_JS_URL . 'helpers.js', [], EVERYPAY_PLUGIN_VERSION);
 		wp_enqueue_script('everypay_helpers');
 
-		wp_register_script('everypay_modal', EVERYPAY_JS_URL . 'everypay_modal.js', array(), false, true);
+		wp_register_script('everypay_modal', EVERYPAY_JS_URL . 'everypay_modal.js', array(), EVERYPAY_PLUGIN_VERSION, true);
 		wp_enqueue_script('everypay_modal');
 
-		wp_register_script('everypay', EVERYPAY_JS_URL . 'everypay.js', array(), false, true);
+		wp_register_script('everypay', EVERYPAY_JS_URL . 'everypay.js', array(), EVERYPAY_PLUGIN_VERSION, true);
 		wp_enqueue_script('everypay');
 	}
 
@@ -300,35 +336,35 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 
 	public function admin_options()
 	{
-?>
-		<table class="form-table">
+		?>
+        <table class="form-table">
 			<?php $this->generate_settings_html(); ?>
-			<tr valign="top">
-				<th scope="row" class="titledesc" style="padding-top:0">&nbsp;</th>
-				<td class="forminp" id="everypay-max_installments-table" style="padding-top:0">
-					<div id="installments"></div>
-					<div id="installment-table" style="display:none">
-						<table class="widefat wc_input_table table" cellspacing="0">
-							<thead>
-								<tr>
-									<th>Από (Ποσό σε &euro;)</th>
-									<th>Eως (Ποσό σε &euro;)</th>
-									<th>Μέγιστος Αρ. Δόσεων</th>
-									<th>
-										<a class="button-primary" href="#" id="add-installment" style="width:101px;">
-											<i class="icon icon-plus-sign"></i> <span class="ab-icon"></span>  Προσθήκη
-										</a>
-									</th>
-								</tr>
-							</thead>
-							<tbody>
-							</tbody>
-						</table>
-					</div>
-				</td>
-			</tr>
-		</table>
-<?php
+            <tr valign="top">
+                <th scope="row" class="titledesc" style="padding-top:0">&nbsp;</th>
+                <td class="forminp" id="everypay-max_installments-table" style="padding-top:0">
+                    <div id="installments"></div>
+                    <div id="installment-table" style="display:none">
+                        <table class="widefat wc_input_table table" cellspacing="0">
+                            <thead>
+                            <tr>
+                                <th>Από (Ποσό σε &euro;)</th>
+                                <th>Eως (Ποσό σε &euro;)</th>
+                                <th>Μέγιστος Αρ. Δόσεων</th>
+                                <th>
+                                    <a class="button-primary" href="#" id="add-installment" style="width:101px;">
+                                        <i class="icon icon-plus-sign"></i> <span class="ab-icon"></span> Προσθήκη
+                                    </a>
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </td>
+            </tr>
+        </table>
+		<?php
 	}
 
 	/**

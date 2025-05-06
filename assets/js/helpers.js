@@ -40,6 +40,11 @@ var create_payload = function(everypayData) {
     ) {
         payload.installments = calculate_installments(everypayData.max_installments);
     }
+
+    if (Boolean(everypayData.googlePay)) {
+        payload.otherPaymentMethods = { googlePay: { ...everypayData.googlePay }};
+    }
+
     return payload;
 };
 

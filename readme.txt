@@ -1,9 +1,9 @@
 === EveryPay Payment Gateway for WooCommerce ===
 
 Tags: everypay, 3ds, credit card, debit card, payment gateway, payments, payment request, woocommerce, store, sales, sell, shop, shopping, cart, checkout,ecommerce, e-commerce, commerce
-Requires at least: 4.0
-Tested up to: 6.6
-Requires PHP: 7.0
+Requires at least: 5.0
+Tested up to: 6.8
+Requires PHP: 7.4
 Stable tag: 3.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
