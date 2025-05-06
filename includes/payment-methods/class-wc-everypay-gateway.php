@@ -292,10 +292,10 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 			return;
 		}
 
-		wp_register_style('everypay_styles', EVERYPAY_CSS_URL . 'everypay_styles.css');
+		wp_register_style('everypay_styles', EVERYPAY_CSS_URL . 'everypay_styles.css', [], EVERYPAY_PLUGIN_VERSION);
 		wp_enqueue_style('everypay_styles');
 
-		wp_register_style('everypay_modal', EVERYPAY_CSS_URL . 'everypay_modal.css');
+		wp_register_style('everypay_modal', EVERYPAY_CSS_URL . 'everypay_modal.css', [], EVERYPAY_PLUGIN_VERSION);
 		wp_enqueue_style('everypay_modal');
 
 		if (EVERYPAY_SANDBOX) {
@@ -306,13 +306,13 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 
 		wp_enqueue_script('everypay_script');
 
-		wp_register_script('everypay_helpers', EVERYPAY_JS_URL . 'helpers.js');
+		wp_register_script('everypay_helpers', EVERYPAY_JS_URL . 'helpers.js', [], EVERYPAY_PLUGIN_VERSION);
 		wp_enqueue_script('everypay_helpers');
 
-		wp_register_script('everypay_modal', EVERYPAY_JS_URL . 'everypay_modal.js', array(), false, true);
+		wp_register_script('everypay_modal', EVERYPAY_JS_URL . 'everypay_modal.js', array(), EVERYPAY_PLUGIN_VERSION, true);
 		wp_enqueue_script('everypay_modal');
 
-		wp_register_script('everypay', EVERYPAY_JS_URL . 'everypay.js', array(), false, true);
+		wp_register_script('everypay', EVERYPAY_JS_URL . 'everypay.js', array(), EVERYPAY_PLUGIN_VERSION, true);
 		wp_enqueue_script('everypay');
 	}
 

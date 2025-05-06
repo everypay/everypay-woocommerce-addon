@@ -61,7 +61,7 @@ return [
 	],
 	'everypay_googlepay_warning' => [
 		'type' => 'title',
-		'description' => '<div id="googlepay-warning" style="color: red; font-weight: bold;">
+		'description' => '<div id="googlepay-warning" style="color: orange; font-weight: bold;">
 			⚠️ Please contact Support to Enable/Disable Google Pay Payments Processing.
 		</div>',
 	],

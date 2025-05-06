@@ -46,6 +46,7 @@ function everypay_init()
         }
 
         public function init() {
+			define('EVERYPAY_PLUGIN_VERSION', '3.7');
             define('EVERYPAY_IMAGES_URL', plugins_url('images/', __FILE__));
             define('EVERYPAY_JS_URL', plugins_url('assets/js/', __FILE__));
             define('EVERYPAY_CSS_URL', plugins_url('assets/css/', __FILE__));
