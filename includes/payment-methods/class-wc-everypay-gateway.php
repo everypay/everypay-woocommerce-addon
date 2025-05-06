@@ -86,7 +86,7 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 				$googlePayMerchantUrl,
 				$googlePayAllowedCardNetworks,
 				$googlePayAllowedAuthMethods,
-                $googlePayButtonColor
+				$googlePayButtonColor
 			);
 		}
 

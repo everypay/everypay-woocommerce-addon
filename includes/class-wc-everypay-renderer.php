@@ -120,7 +120,7 @@ class WC_Everypay_Renderer
 		string $merchantUrl,
 		string $allowedCardNetworks,
 		string $allowedAuthMethods,
-        string $buttonColor
+		string $buttonColor
 	): void
 	{
 		$this->isGooglePayEnabled = true;
@@ -129,7 +129,7 @@ class WC_Everypay_Renderer
 		$this->googlePayMerchantUrl = $merchantUrl;
 		$this->googlePayAllowedCardNetworks = $allowedCardNetworks;
 		$this->googlePayAllowedAuthMethods = $allowedAuthMethods;
-        $this->googlePayButtonColor = $buttonColor;
+		$this->googlePayButtonColor = $buttonColor;
 	}
 
 	public function setApplePay(
@@ -143,7 +143,7 @@ class WC_Everypay_Renderer
 		$this->isApplePayEnabled = true;
 		$this->applePayCountryCode = $countryCode;
 		$this->applePayMerchantName = $merchantName;
-		$this->applePayMerchantUrl= $merchantUrl;
+		$this->applePayMerchantUrl = $merchantUrl;
 		$this->applePayAllowedCardNetworks = $allowedCardNetworks;
 		$this->applePayButtonColor = $buttonColor;
 	}
