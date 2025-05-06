@@ -163,11 +163,24 @@ jQuery(document).ready(function ($) {
         $('#woocommerce_everypay_everypay_googlepay_allowed_card_networks').closest('tr').toggle(enabled);
         $('#woocommerce_everypay_everypay_googlepay_merchant_url').closest('tr').toggle(enabled);
         $('#woocommerce_everypay_everypay_googlepay_allowed_auth_methods').closest('tr').toggle(enabled);
+        $('#woocommerce_everypay_everypay_googlepay_button_color').closest('tr').toggle(enabled);
     }
 
     toggleGooglePayFields();
     $('#woocommerce_everypay_everypay_googlepay_enabled').on('change', toggleGooglePayFields);
 
+    function toggleApplePayFields() {
+        const enabled = $('#woocommerce_everypay_everypay_applepay_enabled').is(':checked');
+        $('#applepay-warning').toggle(enabled);
+        $('#woocommerce_everypay_everypay_applepay_country_code').closest('tr').toggle(enabled);
+        $('#woocommerce_everypay_everypay_applepay_merchant_name').closest('tr').toggle(enabled);
+        $('#woocommerce_everypay_everypay_applepay_allowed_card_networks').closest('tr').toggle(enabled);
+        $('#woocommerce_everypay_everypay_applepay_merchant_url').closest('tr').toggle(enabled);
+        $('#woocommerce_everypay_everypay_applepay_button_color').closest('tr').toggle(enabled);
+    }
+
+    toggleApplePayFields();
+    $('#woocommerce_everypay_everypay_applepay_enabled').on('change', toggleApplePayFields);
 });
 
 
