@@ -51,7 +51,7 @@ class WC_Everypay_Admin
 		if (isset($_GET['page']) && $_GET['page'] == 'wc-settings'
 			&& isset($_GET['tab']) && $_GET['tab'] == 'checkout'
 			&& isset($_GET['section']) && in_array($_GET['section'], array('wc_everypay_gateway', 'everypay'))) {
-			l('everypay_script1', EVERYPAY_JS_URL . 'admin/mustache.min.js', array('jquery'), EVERYPAY_PLUGIN_VERSION, true);
+			wp_register_script('everypay_script1', EVERYPAY_JS_URL . 'admin/mustache.min.js', array('jquery'), EVERYPAY_PLUGIN_VERSION, true);
 			wp_enqueue_script('everypay_script1');
 
 			wp_register_script('everypay_script2', EVERYPAY_JS_URL . 'admin/everypay.js', array('jquery'), EVERYPAY_PLUGIN_VERSION, true);
