@@ -7,12 +7,22 @@ class WC_Everypay_Renderer
 	private $public_key;
 	private $locale;
 	private $tokenization_status;
+
 	private $isGooglePayEnabled;
 	private $googlePayCountryCode;
 	private $googlePayMerchantName;
 	private $googlePayMerchantUrl;
 	private $googlePayAllowedCardNetworks;
 	private $googlePayAllowedAuthMethods;
+	private $googlePayButtonColor;
+
+	private $isApplePayEnabled;
+	private $applePayCountryCode;
+	private $applePayMerchantName;
+	private $applePayMerchantUrl;
+	private $applePayAllowedCardNetworks;
+	private $applePayButtonColor;
+
 
 	public function __construct($helpers, $public_key, $tokenization_status)
 	{
@@ -48,6 +58,17 @@ class WC_Everypay_Renderer
 				'merchantUrl' => $this->googlePayMerchantUrl,
 				'allowedCardNetworks' => explode(',', $this->googlePayAllowedCardNetworks),
 				'allowedAuthMethods' => explode(',', $this->googlePayAllowedAuthMethods),
+				'buttonColor' => $this->googlePayButtonColor,
+			];
+		}
+
+		if ($this->isApplePayEnabled) {
+			$EVDATA['applePay'] = [
+				'countryCode' => $this->applePayCountryCode,
+				'merchantName' => $this->applePayMerchantName,
+				'merchantUrl' => $this->applePayMerchantUrl,
+				'allowedCardNetworks' => explode(',', $this->applePayAllowedCardNetworks),
+				'buttonColor' => $this->applePayButtonColor,
 			];
 		}
 
@@ -99,7 +120,8 @@ class WC_Everypay_Renderer
 		string $merchantName,
 		string $merchantUrl,
 		string $allowedCardNetworks,
-		string $allowedAuthMethods
+		string $allowedAuthMethods,
+		string $buttonColor
 	): void
 	{
 		$this->isGooglePayEnabled = true;
@@ -108,5 +130,22 @@ class WC_Everypay_Renderer
 		$this->googlePayMerchantUrl = $merchantUrl;
 		$this->googlePayAllowedCardNetworks = $allowedCardNetworks;
 		$this->googlePayAllowedAuthMethods = $allowedAuthMethods;
+		$this->googlePayButtonColor = $buttonColor;
+	}
+
+	public function setApplePay(
+		string $countryCode,
+		string $merchantName,
+		string $merchantUrl,
+		string $allowedCardNetworks,
+		string $buttonColor
+	): void
+	{
+		$this->isApplePayEnabled = true;
+		$this->applePayCountryCode = $countryCode;
+		$this->applePayMerchantName = $merchantName;
+		$this->applePayMerchantUrl = $merchantUrl;
+		$this->applePayAllowedCardNetworks = $allowedCardNetworks;
+		$this->applePayButtonColor = $buttonColor;
 	}
 }

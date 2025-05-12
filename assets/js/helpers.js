@@ -46,6 +46,10 @@ var create_payload = function(everypayData) {
         payload.otherPaymentMethods = { googlePay: { ...everypayData.googlePay }};
     }
 
+    if (Boolean(everypayData.applePay)) {
+        payload.otherPaymentMethods = { ...payload.otherPaymentMethods, applePay: { ...everypayData.applePay }};
+    }
+
     return payload;
 };
 

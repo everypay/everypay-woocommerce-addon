@@ -102,6 +102,62 @@ return [
 		'desc_tip' => 'Comma-separated (e.g. CRYPTOGRAM_3DS,PAN_ONLY)',
 		'description' => 'Comma-separated (e.g. CRYPTOGRAM_3DS,PAN_ONLY)',
 	],
+	'everypay_googlepay_button_color' => [
+		'title' => 'Button Color',
+		'type' => 'text',
+		'default' => 'black',
+		'desc_tip' => 'Available options are black or white',
+		'description' => 'Available options are black or white',
+	],
+	'everypay_applepay_enabled' => [
+		'title' => 'Apple Pay',
+		'type' => 'checkbox',
+		'label' => 'Enable Apple Pay',
+		'default' => false,
+	],
+	'everypay_applepay_warning' => [
+		'type' => 'title',
+		'description' => '<div id="applepay-warning" style="color: orange; font-weight: bold;">
+			⚠️ Please contact Support to Enable/Disable Apple Pay Payments Processing.
+		</div>',
+	],
+	'everypay_applepay_country_code' => [
+		'title' => 'Country Code',
+		'type' => 'text',
+		'default' => WC()->countries->get_base_country(),
+		'desc_tip' => 'Billing country for Apple Pay',
+		'description' => 'Billing country for Apple Pay',
+	],
+	'everypay_applepay_merchant_name' => [
+		'title' => 'Merchant Name',
+		'type' => 'text',
+		'default' => 'MerchantName',
+		'desc_tip' => 'The name to be displayed on the payform modal',
+		'description' => 'The name to be displayed on the payform modal',
+		'wrapper_class' => 'hide-if-googlepay-disabled',
+	],
+	'everypay_applepay_merchant_url' => [
+		'title' => 'Merchant URL',
+		'type' => 'text',
+		'default' => home_url(),
+		'desc_tip' => true,
+		'description' => 'Your store URL (e.g. https://my-store.com)',
+		'desc_tip' => 'Your store URL (e.g. https://my-store.com)',
+	],
+	'everypay_applepay_allowed_card_networks' => [
+		'title' => 'Allowed Card Networks',
+		'type' => 'text',
+		'default' => 'VISA,MASTERCARD',
+		'desc_tip' => 'Comma-separated (e.g. VISA,MASTERCARD)',
+		'description' => 'Comma-separated (e.g. VISA,MASTERCARD)',
+	],
+	'everypay_applepay_button_color' => [
+		'title' => 'Button Color',
+		'type' => 'text',
+		'default' => 'black',
+		'desc_tip' => 'Available options are black or white',
+		'description' => 'Available options are black or white',
+	],
 	'everypay_maximum_installments' => [
 		'title' => 'Everypay Installments',
 		'type' => 'hidden',
