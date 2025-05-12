@@ -3,6 +3,7 @@ var create_payload = function(everypayData) {
    var payload = {
         pk: everypayData.pk,
         amount: everypayData.amount,
+        iframeSource: "Woocommerce CMS - " + everypayData.woocommerce_version,
         display: {
             staticCardPlaceholder: true
         }
@@ -43,6 +44,10 @@ var create_payload = function(everypayData) {
 
     if (Boolean(everypayData.googlePay)) {
         payload.otherPaymentMethods = { googlePay: { ...everypayData.googlePay }};
+    }
+
+    if (Boolean(everypayData.applePay)) {
+        payload.otherPaymentMethods = { ...payload.otherPaymentMethods, applePay: { ...everypayData.applePay }};
     }
 
     return payload;

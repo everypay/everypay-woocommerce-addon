@@ -49,18 +49,6 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 	 */
 	private $locale;
 
-	private $isGooglePayEnabled;
-
-	private $googlePayCountryCode;
-
-	private $googlePayMerchantName;
-
-	private $googlePayMerchantUrl;
-
-	private $googlePayAllowedCardNetworks;
-
-	private $googlePayAllowedAuthMethods;
-
 	public function __construct()
 	{
 		$this->id = 'everypay';
@@ -80,23 +68,42 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 		$this->tokenization_status = $this->get_option('everypay_tokenization');
 		$this->everypay_sandbox = $this->get_option('everypay_sandbox');
 
-		$this->isGooglePayEnabled = $this->get_option('everypay_googlepay_enabled');
-		$this->googlePayCountryCode = $this->get_option('everypay_googlepay_country_code');
-		$this->googlePayMerchantName = $this->get_option('everypay_googlepay_merchant_name');
-		$this->googlePayMerchantUrl = $this->get_option('everypay_googlepay_merchant_url');
-		$this->googlePayAllowedCardNetworks = $this->get_option('everypay_googlepay_allowed_card_networks');
-		$this->googlePayAllowedAuthMethods = $this->get_option('everypay_googlepay_allowed_auth_methods');
-
 		$this->helpers = new WC_Everypay_Helpers();
 		$this->renderer = new WC_Everypay_Renderer($this->helpers, $this->everypayPublicKey, $this->tokenization_status);
 
-		if ($this->isGooglePayEnabled == 'yes') {
+		$isGooglePayEnabled = $this->get_option('everypay_googlepay_enabled');
+		$googlePayCountryCode = $this->get_option('everypay_googlepay_country_code');
+		$googlePayMerchantName = $this->get_option('everypay_googlepay_merchant_name');
+		$googlePayMerchantUrl = $this->get_option('everypay_googlepay_merchant_url');
+		$googlePayAllowedCardNetworks = $this->get_option('everypay_googlepay_allowed_card_networks');
+		$googlePayAllowedAuthMethods = $this->get_option('everypay_googlepay_allowed_auth_methods');
+		$googlePayButtonColor = $this->get_option('everypay_googlepay_button_color');
+
+		if ($isGooglePayEnabled == 'yes') {
 			$this->renderer->setGooglePay(
-				$this->googlePayCountryCode,
-				$this->googlePayMerchantName,
-				$this->googlePayMerchantUrl,
-				$this->googlePayAllowedCardNetworks,
-				$this->googlePayAllowedAuthMethods
+				$googlePayCountryCode,
+				$googlePayMerchantName,
+				$googlePayMerchantUrl,
+				$googlePayAllowedCardNetworks,
+				$googlePayAllowedAuthMethods,
+				$googlePayButtonColor
+			);
+		}
+
+		$isApplePayEnabled = $this->get_option('everypay_applepay_enabled');
+		$applePayCountryCode = $this->get_option('everypay_applepay_country_code');
+		$applePayMerchantName = $this->get_option('everypay_applepay_merchant_name');
+		$applePayMerchantUrl = $this->get_option('everypay_applepay_merchant_url');
+		$applePayAllowedCardNetworks = $this->get_option('everypay_applepay_allowed_card_networks');
+		$applePayButtonColor = $this->get_option('everypay_applepay_button_color');
+
+		if ($isApplePayEnabled == 'yes') {
+			$this->renderer->setApplePay(
+				$applePayCountryCode,
+				$applePayMerchantName,
+				$applePayMerchantUrl,
+				$applePayAllowedCardNetworks,
+				$applePayButtonColor
 			);
 		}
 
