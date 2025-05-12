@@ -50,16 +50,11 @@ var create_payload = function(everypayData) {
 
 var calculate_installments = function (max_installments) {
     var installments = [];
-    var y = 2;
-    for (var i = 2; i <= max_installments; i += y) {
-        if (i >= 12) {
-            y = 12;
-        }
+    for (var i = 2; i <= max_installments; i++) {
         installments.push(i);
     }
     return installments;
 };
-
 
 var removeToken = function () {
     if (document.querySelector('input[name="everypayToken"]')) {
