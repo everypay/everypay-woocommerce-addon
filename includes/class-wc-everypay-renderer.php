@@ -38,6 +38,7 @@ class WC_Everypay_Renderer
 			'billing_address' => $billing_address,
 			'email' => $billing_email,
 			'phone' => $billing_phone,
+			'woocommerce_version' => defined('WC_VERSION') ? WC_VERSION : '',
 		);
 
 		if ($this->isGooglePayEnabled) {
