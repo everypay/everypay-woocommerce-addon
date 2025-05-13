@@ -167,7 +167,7 @@ class WC_Everypay_Api
         $response['status'] = $info['http_code'];
         $response['body']   = json_decode($result, true);
 
-		if ((!isset($response['body']) || empty($response['body'])) && $response['status'] !== 204) {
+       	if ((!isset($response['body']) || empty($response['body'])) && $response['status'] !== 204) {
             throw new Exception('response body is empty. ' . $query);
         }
 

@@ -76,7 +76,7 @@ add_action('wp_ajax_register_apple_pay_merchant_domain', 'register_apple_pay_mer
 
 function register_apple_pay_merchant_domain()
 {
-	if (!isset( $_POST['_nonce'] ) || ! wp_verify_nonce( $_POST['_nonce'], 'everypay_register_domain_nonce' ) ) {
+	if (!isset( $_POST['_nonce'] ) || !wp_verify_nonce( $_POST['_nonce'], 'everypay_register_domain_nonce' )) {
 		wp_send_json_error( [ 'message' => 'Invalid nonce.' ] );
 		wp_die();
 	}
