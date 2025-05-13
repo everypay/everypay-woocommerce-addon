@@ -181,6 +181,47 @@ jQuery(document).ready(function ($) {
 
     toggleApplePayFields();
     $('#woocommerce_everypay_everypay_applepay_enabled').on('change', toggleApplePayFields);
+
+    const merchantField = $('input[name="woocommerce_everypay_everypay_applepay_merchant_url"]');
+    if (merchantField.length) {
+        merchantField.after(`
+            <button id="everypay-merchant-url-action" class="button-secondary" style="margin-left: 10px;">Register Domain</button>
+            <div id="everypay-merchant-url-loader" style="display: none; margin-left: 10px; vertical-align: middle;">
+                <img src="${everypay_ajax_object.spinner_url}" alt="Loading..." style="vertical-align: middle;"> Registering...
+            </div>
+        `);
+    }
+
+    $(document).on('click', '#everypay-merchant-url-action', function(e) {
+        e.preventDefault();
+        const merchantDomain = merchantField.val();
+
+        if (!merchantDomain) {
+            alert("Please enter a valid Domain.");
+            return;
+        }
+
+        $('#everypay-merchant-url-loader').show();
+
+        $.ajax({
+            url: everypay_ajax_object.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'register_apple_pay_merchant_domain',
+                merchantDomain: merchantDomain,
+                _nonce: everypay_ajax_object.nonce,
+            },
+            dataType: 'json',
+            success: function(response) {
+                $('#everypay-merchant-url-loader').hide();
+                alert(response.success ? "Success: " + response.data.message : "Error: " + response.data.message);
+            },
+            error: function(xhr, status, error) {
+                $('#everypay-merchant-url-loader').hide();
+                alert("An error occurred: " + error);
+            }
+        });
+    });
 });
 
 

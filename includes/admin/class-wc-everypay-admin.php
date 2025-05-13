@@ -56,6 +56,12 @@ class WC_Everypay_Admin
 
 			wp_register_script('everypay_script2', EVERYPAY_JS_URL . 'admin/everypay.js', array('jquery'), EVERYPAY_PLUGIN_VERSION, true);
 			wp_enqueue_script('everypay_script2');
+
+			wp_localize_script('everypay_script2', 'everypay_ajax_object', [
+				'ajax_url'   => admin_url('admin-ajax.php'),
+				'nonce'      => wp_create_nonce('everypay_register_domain_nonce'),
+				'spinner_url' => admin_url('images/spinner.gif')
+			]);
 		}
 	}
 }
