@@ -72,6 +72,52 @@ include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 
 add_action('plugins_loaded', 'everypay_init');
 
+add_action('wp_ajax_register_apple_pay_merchant_domain', 'register_apple_pay_merchant_domain');
+
+function register_apple_pay_merchant_domain()
+{
+	if (!isset( $_POST['_nonce'] ) || !wp_verify_nonce( $_POST['_nonce'], 'everypay_register_domain_nonce' )) {
+		wp_send_json_error( [ 'message' => 'Invalid nonce.' ] );
+		wp_die();
+	}
+
+	$merchant_domain = isset( $_POST['merchantDomain'] ) ? sanitize_url( $_POST['merchantDomain'] ) : '';
+	if (empty($merchant_domain)) {
+		wp_send_json_error( [ 'message' => 'Merchant domain is required.' ] );
+		wp_die();
+	}
+
+	$parsed_merchant_domain = parse_url($merchant_domain);
+	if (!isset($parsed_merchant_domain['host'])) {
+		wp_send_json_error( [ 'message' => 'Merchant domain is invalid.' ] );
+		wp_die();
+	}
+
+	$merchant_domain = $parsed_merchant_domain['host'];
+
+	$payment_gateways = WC()->payment_gateways->get_available_payment_gateways();
+	if (!isset($payment_gateways['everypay'])) {
+		wp_send_json_error( [ 'message' => 'Payment gateway not found.' ] );
+		wp_die();
+	}
+
+	$success = $payment_gateways['everypay']->register_apple_pay_merchant_domain($merchant_domain);
+
+	if ($success) {
+		$message = EVERYPAY_SANDBOX
+			? 'Domain registered successfully in sandbox.'
+			: 'Domain registered successfully in production.';
+		wp_send_json_success(['message' => $message]);
+	} else {
+		$message = EVERYPAY_SANDBOX
+			? 'Failed to register the domain in sandbox.'
+			: 'Failed to register the domain in production.';
+		wp_send_json_error(['message' => $message]);
+	}
+
+	wp_die();
+}
+
 function install() {
     require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-repository.php";
     $repository = new WC_Everypay_Repository();

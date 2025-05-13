@@ -400,4 +400,20 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 
 		return $available_gateways;
 	}
+
+	public function register_apple_pay_merchant_domain(string $domain)
+	{
+		if (empty($domain)) {
+			return false;
+		}
+
+		try {
+			WC_Everypay_Api::setApiKey($this->everypaySecretKey);
+			WC_Everypay_Api::registerApplePayMerchantDomain($domain);
+
+			return true;
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
 }
