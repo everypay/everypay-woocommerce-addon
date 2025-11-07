@@ -49,6 +49,33 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 	 */
 	private $locale;
 
+	/**
+	 * IRIS integration toggle.
+	 *
+	 * @var bool
+	 */
+	private $iris_enabled = false;
+
+	/**
+	 * @var string
+	 */
+	private $iris_merchant_name = '';
+
+	/**
+	 * @var string
+	 */
+	private $iris_callback_url = '';
+
+	/**
+	 * @var string
+	 */
+	private $iris_country = '';
+
+	/**
+	 * @var string
+	 */
+	private $iris_md = '';
+
 	public function __construct()
 	{
 		$this->id = 'everypay';
@@ -67,6 +94,14 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 		$this->max_installments = $this->get_option('everypay_maximum_installments');
 		$this->tokenization_status = $this->get_option('everypay_tokenization');
 		$this->everypay_sandbox = $this->get_option('everypay_sandbox');
+		$this->iris_enabled = $this->get_option('everypay_iris_enabled') === 'yes';
+		$this->iris_merchant_name = sanitize_text_field($this->get_option('everypay_iris_merchant_name'));
+		$this->iris_callback_url = esc_url_raw(home_url('/everypay-iris-callback'));
+		$this->iris_country = 'GR';
+
+		if ($this->iris_enabled) {
+			$this->prepare_iris_reference();
+		}
 
 		$this->helpers = new WC_Everypay_Helpers();
 		$this->renderer = new WC_Everypay_Renderer($this->helpers, $this->everypayPublicKey, $this->tokenization_status);
@@ -105,6 +140,15 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 				$applePayAllowedCardNetworks,
 				$applePayButtonColor
 			);
+		}
+
+		if ($this->iris_enabled) {
+			$this->renderer->setIrisConfiguration(array(
+				'merchant_name' => $this->iris_merchant_name,
+				'callback_url' => $this->iris_callback_url,
+				'country' => $this->iris_country ?: 'GR',
+				'md' => $this->iris_md,
+			));
 		}
 
 		if (!defined("EVERYPAY_SANDBOX")) {
@@ -149,14 +193,50 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 			$this->max_installments
 		);
 
-		return array(
+		$payload = array(
 			'description' => $description,
 			'amount' => $amount,
 			'payee_email' => $billing_email,
 			'payee_phone' => $billing_phone,
-			'token' => $token,
 			'max_installments' => $installments,
+			'token' => $token,
 		);
+
+		if ($this->is_iris_token($token)) {
+			unset($payload['token']);
+			$payload['source_token'] = $token;
+			$payload['payment_method'] = 'iris';
+		}
+
+		return $payload;
+	}
+
+	private function prepare_iris_reference(): void
+	{
+		if (is_admin() && !defined('DOING_AJAX')) {
+			return;
+		}
+
+		if (!function_exists('WC') || !WC()->session) {
+			return;
+		}
+
+		$reference = WC()->session->get('everypay_iris_md');
+		if (empty($reference)) {
+			if (function_exists('wp_generate_uuid4')) {
+				$reference = wp_generate_uuid4();
+			} else {
+				$reference = uniqid('iris_', true);
+			}
+			WC()->session->set('everypay_iris_md', $reference);
+		}
+
+		$this->iris_md = $reference;
+	}
+
+	private function is_iris_token($token)
+	{
+		return is_string($token) && strpos($token, 'src_') === 0;
 	}
 
 	/*
@@ -175,26 +255,54 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 					'messages' => '<div class=""></div>'
 				);
 			}
+			$wc_order = new WC_Order($order_id);
+
+			if ($this->is_iris_enabled() && !empty($this->iris_md) && !$wc_order->get_meta('everypay_iris_md')) {
+				$wc_order->update_meta_data('everypay_iris_md', $this->iris_md);
+				$wc_order->save();
+			}
+
 			if (!isset($_POST['everypayToken']) || empty($_POST['everypayToken'])) {
 				$this->renderer->render_iframe(WC()->cart->total, $this->max_installments);
 				exit;
 			}
+
 			$token = sanitize_text_field($_POST['everypayToken']);
 			unset($_POST['everypayToken']);
-			$wc_order = new WC_Order($order_id);
 			WC_Everypay_Api::setApiKey($this->everypaySecretKey);
+			$is_iris_payment = $this->is_iris_token($token);
+
+			if ($is_iris_payment) {
+				$wc_order->update_meta_data('everypay_source_token', $token);
+				if (!empty($this->iris_md)) {
+					$wc_order->update_meta_data('everypay_iris_md', $this->iris_md);
+				}
+				$wc_order->save();
+			}
+
 			$payload = $this->create_payload($wc_order, $token);
 
-			if (is_user_logged_in() && (isset($_POST['everypay_save_card']) || isset($_POST['tokenized-card'])) && $this->tokenization_status == 'yes') {
+			if (!$is_iris_payment && is_user_logged_in() && (isset($_POST['everypay_save_card']) || isset($_POST['tokenized-card'])) && $this->tokenization_status == 'yes') {
 				(new WC_Everypay_Repository())->save_logs('tokenization_payment', implode(" ", $payload));
 				$user_id = $wc_order->get_user_id();
 				$everypay_tokenization = new WC_Everypay_Tokenization();
 				$response = $everypay_tokenization->process_tokenized_payment($user_id, $payload);
 			} else {
-				(new WC_Everypay_Repository())->save_logs('payment', implode(" ", $payload));
+				(new WC_Everypay_Repository())->save_logs($is_iris_payment ? 'iris_payment' : 'payment', implode(" ", $payload));
 				$response = WC_Everypay_Api::addPayment($payload);
 			}
-			return $this->complete_order($wc_order, $response['body']['token']);
+			$payment_token = '';
+			if (isset($response['body']['token'])) {
+				$payment_token = $response['body']['token'];
+			} elseif (isset($response['body']['payment']['token'])) {
+				$payment_token = $response['body']['payment']['token'];
+			}
+
+			if (empty($payment_token)) {
+				throw new Exception('Everypay response did not include payment token.');
+			}
+
+			return $this->complete_order($wc_order, $payment_token, $is_iris_payment ? 'iris' : 'card');
 		} catch (Exception $e) {
 
 			$error = 'An error occurred. Please try again.';
@@ -213,17 +321,24 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 		}
 	}
 
-	private function complete_order($wc_order, $token)
+	private function complete_order($wc_order, $token, $method = 'card')
 	{
 		$dt = new DateTime("Now");
 		$timestamp = $dt->format('Y-m-d H:i:s e');
 
-		$wc_order->add_order_note('Everypay payment completed at-' . $timestamp);
+		$method_label = $method === 'iris' ? 'IRIS' : 'Card';
+		$wc_order->add_order_note('Everypay ' . $method_label . ' payment completed at-' . $timestamp);
 
 		$wc_order->update_meta_data('everypay_payment_token', $token);
+		$wc_order->update_meta_data('everypay_payment_method', $method);
+		if ($method === 'iris') {
+			$wc_order->set_payment_method_title(__('IRIS Bank Payment', 'everypay'));
+		}
 		$wc_order->payment_complete();
 
-		WC()->cart->empty_cart();
+		if (WC()->cart) {
+			WC()->cart->empty_cart();
+		}
 
 		return array(
 			'result' => 'success',
@@ -415,5 +530,43 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 		} catch (\Exception $e) {
 			return false;
 		}
+	}
+
+	public function is_iris_enabled(): bool
+	{
+		return (bool) $this->iris_enabled;
+	}
+
+	public function get_iris_merchant_name(): string
+	{
+		return $this->iris_merchant_name;
+	}
+
+	public function get_iris_callback_url(): string
+	{
+		return $this->iris_callback_url;
+	}
+
+	public function get_iris_country(): string
+	{
+		return $this->iris_country ?: 'GR';
+	}
+
+	public function get_secret_key(): string
+	{
+		return $this->everypaySecretKey;
+	}
+
+	public function get_public_key(): string
+	{
+		return $this->everypayPublicKey;
+	}
+
+	public function get_iris_md_reference(): string
+	{
+		if (empty($this->iris_md) && $this->iris_enabled) {
+			$this->prepare_iris_reference();
+		}
+		return $this->iris_md;
 	}
 }

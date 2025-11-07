@@ -188,4 +188,11 @@ class WC_Everypay_Api
 			],
 		]);
 	}
+
+	public static function createIrisSession(array $params): array
+	{
+		$url = self::getApiEndPoint() . '/iris/sessions';
+
+		return self::request($url, $params);
+	}
 }
