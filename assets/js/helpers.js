@@ -50,6 +50,27 @@ var create_payload = function(everypayData) {
         payload.otherPaymentMethods = { ...payload.otherPaymentMethods, applePay: { ...everypayData.applePay }};
     }
 
+    if (Boolean(everypayData.iris)) {
+        var iris = {
+            merchantName: everypayData.iris.merchantName,
+            country: everypayData.iris.country,
+            callbackUrl: everypayData.iris.callbackUrl,
+            md: everypayData.iris.md,
+        };
+
+        Object.defineProperty(iris, 'sessionHandler', {
+            value: createIrisSessionHandler(everypayData.iris),
+            enumerable: false,
+            configurable: true,
+            writable: true
+        });
+
+        payload.otherPaymentMethods = {
+            ...payload.otherPaymentMethods,
+            iris: iris
+        };
+    }
+
     return payload;
 };
 
@@ -67,3 +88,55 @@ var removeToken = function () {
     }
 };
 
+var createIrisSessionHandler = function (irisConfig) {
+    return async function (sessionPayload) {
+        var body = new URLSearchParams();
+        body.append('action', irisConfig.action);
+        body.append('_nonce', irisConfig.nonce);
+
+        if (sessionPayload && sessionPayload.uuid) {
+            body.append('uuid', sessionPayload.uuid);
+        }
+        if (sessionPayload && sessionPayload.md) {
+            body.append('md', sessionPayload.md);
+        }
+
+        if (irisConfig.amount) {
+            body.append('amount', irisConfig.amount);
+        }
+
+        if (irisConfig.currency) {
+            body.append('currency', irisConfig.currency);
+        }
+
+        if (irisConfig.md) {
+            body.append('md', irisConfig.md);
+        }
+
+        if (irisConfig.country) {
+            body.append('country', irisConfig.country);
+        }
+
+        try {
+            var response = await fetch(irisConfig.ajaxUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                },
+                body: body.toString()
+            });
+
+            var json = await response.json();
+            if (!json || !json.success || !json.data || !json.data.signature) {
+                var message = (json && json.data && json.data.message) ? json.data.message : 'Invalid IRIS session response';
+                throw new Error(message);
+            }
+
+            return json.data.signature;
+        } catch (error) {
+            console.error('IRIS session creation failed', error);
+            throw error;
+        }
+    };
+};

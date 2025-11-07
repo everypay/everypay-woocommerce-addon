@@ -31,6 +31,16 @@ class WC_Everypay_Admin
 			echo '<div class="error notice"><p><strong>Please fill your Everypay keys, in Woocommerce/Settings/Payments</strong><p/></div>';
 		}
 
+		$iris_enabled = get_option('woocommerce_everypay_everypay_iris_enabled', 'no') === 'yes';
+		if ($iris_enabled) {
+			$iris_merchant = get_option('woocommerce_everypay_everypay_iris_merchant_name');
+			if (empty($iris_merchant)) {
+				echo '<div class="error notice"><p><strong>'
+				     . esc_html__('IRIS is enabled. Please provide an IRIS Merchant Name in WooCommerce ? Settings ? Payments ? Everypay.', 'everypay')
+				     . '</strong><p/></div>';
+			}
+		}
+
 	}
 
 	public function load_admin_css()

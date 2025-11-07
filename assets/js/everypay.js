@@ -8,6 +8,7 @@ var modal = new EverypayModal(EVDATA);
 var payformResponseHandler = function(response) {
 
     if (response && response.response && response.response === 'success') {
+        hideEverypayError();
 
         if (modal) {
             modal.destroy();
@@ -35,6 +36,18 @@ var payformResponseHandler = function(response) {
             }, 350);
         }
 
+    }
+
+    if (response && response.response && response.response === 'error' && response.error) {
+        showEverypayError(response.error);
+
+        setTimeout(function () {
+            hideEverypayError();
+            if (modal) {
+                modal.hide_loading();
+                modal.close();
+            }
+        }, 4000);
     }
 
     if (response.onLoad == true) {
@@ -93,4 +106,30 @@ function load_everypay() {
 
 }
 
+var showEverypayError = function (message) {
+    var existing = document.getElementById('everypay-error');
+    if (!existing) {
+        var container = document.createElement('div');
+        container.id = 'everypay-error';
+        container.className = 'woocommerce-error';
+        container.style.marginBottom = '1em';
 
+        var checkoutForm = document.querySelector('form.woocommerce-checkout');
+        if (checkoutForm) {
+            checkoutForm.insertBefore(container, checkoutForm.firstChild);
+            existing = container;
+        }
+    }
+
+    if (existing) {
+        existing.innerText = message || 'IRIS payment failed. Please try another payment method.';
+        existing.style.display = 'block';
+    }
+};
+
+var hideEverypayError = function () {
+    var existing = document.getElementById('everypay-error');
+    if (existing) {
+        existing.style.display = 'none';
+    }
+};

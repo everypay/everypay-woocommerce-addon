@@ -22,6 +22,7 @@ class WC_Everypay_Renderer
 	private $applePayMerchantUrl;
 	private $applePayAllowedCardNetworks;
 	private $applePayButtonColor;
+	private $irisConfig = array();
 
 
 	public function __construct($helpers, $public_key, $tokenization_status)
