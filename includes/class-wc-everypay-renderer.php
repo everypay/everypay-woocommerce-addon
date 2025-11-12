@@ -73,6 +73,24 @@ class WC_Everypay_Renderer
 			];
 		}
 
+		if (!empty($this->irisConfig)
+			&& !empty($this->irisConfig['merchant_name'])
+			&& !empty($this->irisConfig['callback_url'])
+		) {
+			$EVDATA['iris'] = [
+				'merchantName' => $this->irisConfig['merchant_name'],
+				'callbackUrl' => $this->irisConfig['callback_url'],
+				'country' => $this->irisConfig['country'],
+				'ajaxUrl' => admin_url('admin-ajax.php'),
+				'nonce' => wp_create_nonce('everypay_create_iris_session'),
+				'action' => 'everypay_create_iris_session',
+				'isSandbox' => defined('EVERYPAY_SANDBOX') ? EVERYPAY_SANDBOX : false,
+				'amount' => $total,
+				'currency' => get_woocommerce_currency(),
+				'md' => $this->irisConfig['md'] ?? '',
+			];
+		}
+
 		if (!empty($_POST['tokenized-card'])) {
 			$EVDATA['tokenized'] = true;
 		}
@@ -87,6 +105,11 @@ class WC_Everypay_Renderer
 		);
 
 		echo json_encode($response_data);
+	}
+
+	public function setIrisConfiguration(array $config): void
+	{
+		$this->irisConfig = $config;
 	}
 
 	public function render_cards($cards)

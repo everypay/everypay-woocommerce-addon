@@ -36,7 +36,7 @@ class WC_Everypay_Admin
 			$iris_merchant = get_option('woocommerce_everypay_everypay_iris_merchant_name');
 			if (empty($iris_merchant)) {
 				echo '<div class="error notice"><p><strong>'
-				     . esc_html__('IRIS is enabled. Please provide an IRIS Merchant Name in WooCommerce ? Settings ? Payments ? Everypay.', 'everypay')
+				     . esc_html__('IRIS is enabled. Please provide an IRIS Merchant Name in WooCommerce → Settings → Payments → Everypay.', 'everypay')
 				     . '</strong><p/></div>';
 			}
 		}

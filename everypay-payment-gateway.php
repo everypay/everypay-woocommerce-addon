@@ -388,7 +388,7 @@ function everypay_handle_iris_callback_request()
 						$store_name = 'Shop';
 					}
 
-					$description = $store_name . ' / ' . 'Order' . ' #' . $order->get_order_number() . ' - ' . number_format($amount / 100, 2, ',', '.') . '€';
+					$description = $store_name . ' / ' . 'Order' . ' #' . $order->get_order_number() . ' - ' . number_format($amount / 100, 2, ',', '.') . 'â‚¬';
 					if (empty($description)) {
 						throw new Exception('IRIS payment failed: missing payment description.');
 					}
