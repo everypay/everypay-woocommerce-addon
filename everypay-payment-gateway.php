@@ -12,6 +12,51 @@
 if (!defined('ABSPATH'))
     exit;
 
+function debug($message, ...$params)
+{
+    static $stdout;
+
+    if ($stdout === null) {
+        $stdout = fopen('php://stdout', 'w');
+    }
+
+    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+    $caller = $trace[1] ?? [];
+
+    // $file = $caller['file'] ?? 'n/a';
+    $line = $caller['line'] ?? 'n/a';
+    $class = $caller['class'] ?? '';
+    $type = $caller['type'] ?? '';
+    $function = $caller['function'] ?? '';
+
+    $yellow = "\033[33m";
+    $reset = "\033[0m";
+
+    $location = sprintf(
+        "[{$yellow}DEBUG@%s%s%s():%s{$reset}] ",
+        $class,
+        $type,
+        $function,
+        $line
+    );
+
+    if (count($params) === 1 && is_array($params[0])) {
+        $params = $params[0];
+    } else if (count($params) === 0 && is_array($message)) {
+        $params = [$message];
+        $message = null;
+    }
+
+    if ($message === null) {
+        $message = '';
+    }
+
+    fwrite($stdout, $location . $message . PHP_EOL);
+
+    foreach ($params as $param) {
+        fwrite($stdout, var_export($param, true) . PHP_EOL);
+    }
+}
 
 function everypay_woocommerce_missing_notice() {
     echo '<div class="error"><p><strong>' . sprintf( esc_html__( 'Everypay requires WooCommerce to be installed and active. You can download %s here.'), '<a href="https://woocommerce.com/" target="_blank">WooCommerce</a>' ) . '</strong><p/></div>';
@@ -75,9 +120,8 @@ add_action('plugins_loaded', 'everypay_init');
 add_action('wp_ajax_register_apple_pay_merchant_domain', 'register_apple_pay_merchant_domain');
 add_action('wp_ajax_everypay_create_iris_session', 'everypay_create_iris_session');
 add_action('wp_ajax_nopriv_everypay_create_iris_session', 'everypay_create_iris_session');
-add_action('init', 'everypay_register_rewrite_rules');
-add_filter('query_vars', 'everypay_add_query_vars');
-add_action('template_redirect', 'everypay_maybe_handle_iris_callback');
+add_action('wp_ajax_everypay_iris_callback', 'everypay_handle_iris_callback_request');
+add_action('wp_ajax_nopriv_everypay_iris_callback', 'everypay_handle_iris_callback_request');
 add_action('woocommerce_before_checkout_form', 'everypay_print_iris_error_notice', 5);
 
 function everypay_set_iris_error_notice($message)
@@ -211,26 +255,6 @@ function register_apple_pay_merchant_domain()
 	wp_die();
 }
 
-function everypay_register_rewrite_rules()
-{
-	add_rewrite_rule('^everypay-iris-callback/?$', 'index.php?everypay_iris_callback=1', 'top');
-}
-
-function everypay_add_query_vars($vars)
-{
-	$vars[] = 'everypay_iris_callback';
-	return $vars;
-}
-
-function everypay_maybe_handle_iris_callback()
-{
-	if (!get_query_var('everypay_iris_callback')) {
-		return;
-	}
-
-	everypay_handle_iris_callback_request();
-	exit;
-}
 
 function everypay_handle_iris_callback_request()
 {
@@ -666,8 +690,6 @@ function install() {
     $repository = new WC_Everypay_Repository();
 	$repository->create_tokenization_table();
 	$repository->create_logging_table();
-	everypay_register_rewrite_rules();
-	flush_rewrite_rules();
 }
 
 function uninstall() {
@@ -675,7 +697,6 @@ function uninstall() {
 	$repository = new WC_Everypay_Repository();
 	$repository->drop_tokenization_table();
 	$repository->drop_logging_table();
-	flush_rewrite_rules();
 }
 
 register_activation_hook( __FILE__, 'install' );
