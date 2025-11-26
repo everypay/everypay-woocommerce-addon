@@ -4,7 +4,7 @@
 
 
 <h1 align="center">EveryPay Payment Gateway for WooCommerce</h1>
-<h3 align="center">Accept Credit Cards and Debit Cards easily on your WooCommerce store using EveryPay.</h3>
+<h3 align="center">Accept Credit Cards, Debit Cards or IRIS easily on your WooCommerce store using EveryPay.</h3>
 
 <p align="center">
   <img src="wp_org_assets/EverypayIframe.gif" width="700" height="455">
@@ -12,7 +12,7 @@
 
 ## Description
 
-EveryPay Payment Gateway is a plugin that extends WooCommerce and adds **EveryPay** as the payment method for accepting credit/debit cards payments.
+EveryPay Payment Gateway is a plugin that extends WooCommerce and adds **EveryPay** as the payment method for accepting credit/debit cards  and IRIS payments.
 
 
 ### Requirements
@@ -26,6 +26,7 @@ EveryPay Payment Gateway is a plugin that extends WooCommerce and adds **EveryPa
 3. This plugin bundles with <a href="https://github.com/everypay/everypay-php">Official Everypay® API Libraries</a> Version 1.18.0 to support PHP 5.2 Compatibility.
 4. Configurable through the woocommerce checkout admin panel
 5. Tokenization
+6. Optional IRIS bank payments with sandbox support
 
 ### Manual Installation
 Upload 'everypay-woocommerce-addon' folder to the '/wp-content/plugins/' directory.
@@ -34,6 +35,7 @@ Upload 'everypay-woocommerce-addon' folder to the '/wp-content/plugins/' directo
 
 1. Activate Everypay Payment Gateway in your WordPress plugin section.
 2. Set your EveryPay public and secret key in WooCommerce -> Settings -> Payments -> Everypay Payment Gateway
+3. (Optional) Enable IRIS in the EveryPay gateway settings
 
 ### Notes
 If you have a version prior to 3.1, and you are upgrading the plugin,

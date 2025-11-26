@@ -147,11 +147,11 @@ jQuery(document).ready(function ($) {
             $trs.hide()
         }
     }
-    
+
     $extra_fee.bind('change', function(){
         show_hide_extra_fees()
     })
-    
+
     //trigger init
     show_hide_extra_fees();
 
@@ -181,6 +181,14 @@ jQuery(document).ready(function ($) {
 
     toggleApplePayFields();
     $('#woocommerce_everypay_everypay_applepay_enabled').on('change', toggleApplePayFields);
+
+    function toggleIrisFields() {
+        const enabled = $('#woocommerce_everypay_everypay_iris_enabled').is(':checked');
+        $('#woocommerce_everypay_everypay_iris_merchant_name').closest('tr').toggle(enabled);
+    }
+
+    toggleIrisFields();
+    $('#woocommerce_everypay_everypay_iris_enabled').on('change', toggleIrisFields);
 
     const merchantField = $('input[name="woocommerce_everypay_everypay_applepay_merchant_url"]');
     if (merchantField.length) {
@@ -223,5 +231,3 @@ jQuery(document).ready(function ($) {
         });
     });
 });
-
-

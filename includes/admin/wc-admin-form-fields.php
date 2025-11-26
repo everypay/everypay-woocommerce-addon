@@ -156,6 +156,22 @@ return [
 		'desc_tip' => 'Available options are black or white',
 		'description' => 'Available options are black or white',
 	],
+	'everypay_iris_enabled' => [
+		'title' => 'IRIS',
+		'type' => 'checkbox',
+		'label' => 'Enable IRIS',
+		'description' => 'Offer IRIS bank payments alongside cards.',
+		'desc_tip' => true,
+		'default' => 'no',
+	],
+	'everypay_iris_merchant_name' => [
+		'title' => 'IRIS Merchant Name',
+		'type' => 'text',
+		'default' => get_bloginfo('name'),
+		'desc_tip' => 'Displayed inside the IRIS flow.',
+		'description' => 'Displayed inside the IRIS flow.',
+		'wrapper_class' => 'hide-if-iris-disabled',
+	],
 	'everypay_maximum_installments' => [
 		'title' => 'Everypay Installments',
 		'type' => 'hidden',
