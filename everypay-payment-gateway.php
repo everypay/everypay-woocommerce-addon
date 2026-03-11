@@ -96,13 +96,13 @@ function everypay_init()
             define('EVERYPAY_JS_URL', plugins_url('assets/js/', __FILE__));
             define('EVERYPAY_CSS_URL', plugins_url('assets/css/', __FILE__));
 
-	        require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-helpers.php";
+	    require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-helpers.php";
             require_once plugin_dir_path(__FILE__) . "includes/class-wc-everypay-api.php";
 	        require_once dirname( __FILE__ ) . '/includes/class-wc-everypay-renderer.php';
 	        require_once dirname( __FILE__ ) . '/includes/admin/class-wc-everypay-admin.php';
 	        require_once dirname( __FILE__ ) . '/includes/class-wc-everypay-repository.php';
 	        require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-everypay-gateway.php';
-            require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-everypay-tokenization.php';
+	        require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-everypay-tokenization.php';
 
         }
 
@@ -116,6 +116,8 @@ include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 
 
 add_action('plugins_loaded', 'everypay_init');
+add_action('before_woocommerce_init', 'everypay_declare_blocks_compatibility');
+add_action('woocommerce_blocks_payment_method_type_registration', 'everypay_register_blocks_support');
 
 add_action('wp_ajax_register_apple_pay_merchant_domain', 'register_apple_pay_merchant_domain');
 add_action('wp_ajax_everypay_create_iris_session', 'everypay_create_iris_session');
@@ -123,6 +125,34 @@ add_action('wp_ajax_nopriv_everypay_create_iris_session', 'everypay_create_iris_
 add_action('wp_ajax_everypay_iris_callback', 'everypay_handle_iris_callback_request');
 add_action('wp_ajax_nopriv_everypay_iris_callback', 'everypay_handle_iris_callback_request');
 add_action('woocommerce_before_checkout_form', 'everypay_print_iris_error_notice', 5);
+
+function everypay_declare_blocks_compatibility()
+{
+	if (!class_exists('\Automattic\WooCommerce\Utilities\FeaturesUtil')) {
+		return;
+	}
+
+	\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+		'cart_checkout_blocks',
+		__FILE__,
+		true
+	);
+}
+
+function everypay_register_blocks_support($payment_method_registry)
+{
+	if (!class_exists('\Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType')) {
+		return;
+	}
+
+	require_once dirname( __FILE__ ) . '/includes/class-wc-everypay-blocks-support.php';
+
+	if (!class_exists('WC_Everypay_Blocks_Support')) {
+		return;
+	}
+
+	$payment_method_registry->register(new WC_Everypay_Blocks_Support());
+}
 
 function everypay_set_iris_error_notice($message)
 {

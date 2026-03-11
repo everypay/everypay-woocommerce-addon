@@ -3,6 +3,7 @@
 function EverypayModal(EVDATA) {
 
     this.locale = false;
+    this.onClose = null;
 
     this.init = function() {
         try {
@@ -80,11 +81,14 @@ function EverypayModal(EVDATA) {
     };
 
     this.setCloseEvent = function() {
+        var self = this;
         if (!document.querySelector('#everypay-modal-header span')) {
             return;
         }
         document.querySelector('#everypay-modal-header span')
-            .addEventListener('click', this.close);
+            .addEventListener('click', function() {
+                self.close();
+            });
     };
 
     this.destroy = function() {
@@ -93,12 +97,17 @@ function EverypayModal(EVDATA) {
         }
     };
 
-    this.close = function() {
-        var close_payment_window_text = 'Are you sure you want to close the payment window?';
-        var closeConfirmation = confirm(close_payment_window_text);
+    this.close = function(options) {
+        var settings = options || {};
+        var closeConfirmation = settings.skipConfirm ? true : confirm(this.close_payment_window_text);
 
        if (closeConfirmation && document.getElementById('everypay-modal')) {
            document.getElementById('everypay-modal').style.display = 'none';
+           this.hide_loading();
+
+           if (!settings.silent && typeof this.onClose === 'function') {
+               this.onClose();
+           }
        }
     };
 
