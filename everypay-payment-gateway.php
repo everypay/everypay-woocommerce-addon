@@ -241,6 +241,43 @@ function everypay_find_order_by_iris_reference(string $token = '', string $md = 
 	return null;
 }
 
+function everypay_send_iris_json_response(bool $success, array $data = array(), int $status_code = 200)
+{
+	status_header($status_code);
+	header('Content-Type: application/json; charset=utf-8');
+	echo wp_json_encode(array_merge(array('success' => $success), $data));
+	return;
+}
+
+function everypay_get_gateway_settings(): array
+{
+	$settings = get_option('woocommerce_everypay_settings', array());
+	return is_array($settings) ? $settings : array();
+}
+
+function everypay_is_iris_enabled_in_settings(): bool
+{
+	$settings = everypay_get_gateway_settings();
+	return ($settings['everypay_iris_enabled'] ?? 'no') === 'yes';
+}
+
+function everypay_get_iris_reference(): string
+{
+	if (!function_exists('WC') || !WC()->session) {
+		return '';
+	}
+
+	$reference = WC()->session->get('everypay_iris_md');
+	if (empty($reference)) {
+		$reference = function_exists('wp_generate_uuid4')
+			? wp_generate_uuid4()
+			: uniqid('iris_', true);
+		WC()->session->set('everypay_iris_md', $reference);
+	}
+
+	return (string) $reference;
+}
+
 function register_apple_pay_merchant_domain()
 {
 	if (!isset( $_POST['_nonce'] ) || !wp_verify_nonce( $_POST['_nonce'], 'everypay_register_domain_nonce' )) {
@@ -311,9 +348,7 @@ function everypay_handle_iris_callback_request()
 	}
 
 	if ('POST' !== $_SERVER['REQUEST_METHOD']) {
-		header('Content-Type: application/json; charset=utf-8');
-		status_header(405);
-		echo wp_json_encode(['success' => false, 'message' => 'Method Not Allowed']);
+		everypay_send_iris_json_response(false, ['message' => 'Method Not Allowed'], 405);
 		return;
 	}
 
@@ -326,42 +361,23 @@ function everypay_handle_iris_callback_request()
 	$hash_raw = isset($post_data['hash']) ? $post_data['hash'] : '';
 
 	if (empty($hash_raw)) {
-		status_header(400);
-		echo wp_json_encode(['success' => false, 'message' => 'Missing hash.']);
+		everypay_send_iris_json_response(false, ['message' => 'Missing hash.'], 400);
 		return;
 	}
 
-	$secret_key = '';
-	$gateway_instance = null;
-	if (function_exists('WC')) {
-		$gateways_handler = WC()->payment_gateways();
-		$available_gateways = $gateways_handler ? $gateways_handler->payment_gateways() : array();
-		if (isset($available_gateways['everypay']) && $available_gateways['everypay'] instanceof WC_Everypay_Gateway) {
-			/** @var WC_Everypay_Gateway $gateway_instance */
-			$gateway_instance = $available_gateways['everypay'];
-			$secret_key = $gateway_instance->get_secret_key();
-		}
-	}
+	$gateway_settings = everypay_get_gateway_settings();
+	$secret_key = isset($gateway_settings['everypaySecretKey'])
+		? sanitize_text_field($gateway_settings['everypaySecretKey'])
+		: '';
 
 	if (empty($secret_key)) {
-		$gateway_settings = get_option('woocommerce_everypay_settings', array());
-		if (isset($gateway_settings['everypaySecretKey'])) {
-			$secret_key = $gateway_settings['everypaySecretKey'];
-		}
-	}
-
-	if (empty($secret_key)) {
-		status_header(500);
-		header('Content-Type: application/json; charset=utf-8');
-		echo wp_json_encode(['success' => false, 'message' => 'EveryPay secret key is not configured.']);
+		everypay_send_iris_json_response(false, ['message' => 'EveryPay secret key is not configured.'], 500);
 		return;
 	}
 
 	$decoded_hash = base64_decode($hash_raw, true);
 	if ($decoded_hash === false || strpos($decoded_hash, '|') === false) {
-		status_header(400);
-		header('Content-Type: application/json; charset=utf-8');
-		echo wp_json_encode(['success' => false, 'message' => 'Invalid hash payload.']);
+		everypay_send_iris_json_response(false, ['message' => 'Invalid hash payload.'], 400);
 		return;
 	}
 
@@ -370,9 +386,7 @@ function everypay_handle_iris_callback_request()
 	$calculated_hash = hash_hmac('sha256', $payload_json, $secret_key);
 
 	if (!hash_equals($provided_hash, $calculated_hash)) {
-		status_header(400);
-		header('Content-Type: application/json; charset=utf-8');
-		echo wp_json_encode(['success' => false, 'message' => 'Hash verification failed.']);
+		everypay_send_iris_json_response(false, ['message' => 'Hash verification failed.'], 400);
 		return;
 	}
 
@@ -555,44 +569,27 @@ function everypay_handle_iris_callback_request()
 
 			if (!$has_error) {
 				everypay_clear_iris_error_notice();
-				$redirect_url = $order->get_checkout_order_received_url();
-				if (!empty($redirect_url)) {
-					wp_safe_redirect($redirect_url, 303);
-					exit;
-				}
+				everypay_send_iris_json_response(true, ['order_id' => $order->get_id()]);
+				return;
 			}
 		}
 	}
 
 	if (!$has_error && (!isset($order) || !$order instanceof WC_Order)) {
-	$message = __('IRIS transaction could not be matched to an order. Please contact support or try again.', 'everypay');
-	$message = sanitize_text_field($message);
-	if (function_exists('wc_add_notice')) {
-		wc_add_notice(esc_html($message), 'error');
-	}
-	everypay_set_iris_error_notice($message);
-	$redirect_url = function_exists('wc_get_checkout_url') ? wc_get_checkout_url() : home_url('/');
-	$redirect_url = add_query_arg('everypay-iris-error', rawurlencode($message), $redirect_url);
-		wp_safe_redirect($redirect_url, 303);
-		exit;
+		$message = __('IRIS transaction could not be matched to an order. Please contact support or try again.', 'everypay');
+		$message = sanitize_text_field($message);
+		everypay_send_iris_json_response(false, ['message' => $message], 404);
+		return;
 	}
 
 	if ($has_error) {
-	$message = $error_message ?: __('IRIS payment failed. Please try another payment method.', 'everypay');
-	$message = sanitize_text_field($message);
-	$redirect_url = function_exists('wc_get_checkout_url') ? wc_get_checkout_url() : home_url('/');
-	if (function_exists('wc_add_notice')) {
-		wc_add_notice(esc_html($message), 'error');
-	}
-	everypay_set_iris_error_notice($message);
-	$redirect_url = add_query_arg('everypay-iris-error', rawurlencode($message), $redirect_url);
-		wp_safe_redirect($redirect_url, 303);
-		exit;
+		$message = $error_message ?: __('IRIS payment failed. Please try another payment method.', 'everypay');
+		$message = sanitize_text_field($message);
+		everypay_send_iris_json_response(false, ['message' => $message], 422);
+		return;
 	}
 
-	status_header(200);
-	header('Content-Type: application/json; charset=utf-8');
-	echo wp_json_encode(['success' => true]);
+	everypay_send_iris_json_response(true);
 }
 function everypay_create_iris_session()
 {
@@ -607,18 +604,9 @@ function everypay_create_iris_session()
 			wp_die();
 		}
 
-		$gateways_handler = WC()->payment_gateways();
-		$available_gateways = $gateways_handler ? $gateways_handler->payment_gateways() : array();
+		$gateway_settings = everypay_get_gateway_settings();
 
-		if (!isset($available_gateways['everypay']) || !$available_gateways['everypay'] instanceof WC_Everypay_Gateway) {
-			wp_send_json_error(['message' => 'Payment gateway not found.']);
-			wp_die();
-		}
-
-		/** @var WC_Everypay_Gateway $gateway */
-		$gateway = $available_gateways['everypay'];
-
-		if (!$gateway->is_iris_enabled()) {
+		if (!everypay_is_iris_enabled_in_settings()) {
 			wp_send_json_error(['message' => 'IRIS is not enabled.']);
 			wp_die();
 		}
@@ -640,13 +628,20 @@ function everypay_create_iris_session()
 			? strtoupper(sanitize_text_field(wp_unslash($_POST['currency'])))
 			: get_woocommerce_currency();
 
-		$callback_url = $gateway->get_iris_callback_url();
+		$callback_url = WC_Everypay_Gateway::get_iris_notification_url();
+		$webhook_url = WC_Everypay_Gateway::get_iris_notification_url();
 		if (empty($callback_url)) {
 			wp_send_json_error(['message' => 'IRIS session failed: callback URL is missing.']);
 			wp_die();
 		}
+		if (empty($webhook_url)) {
+			wp_send_json_error(['message' => 'IRIS session failed: webhook URL is missing.']);
+			wp_die();
+		}
 
-		$country = $gateway->get_iris_country();
+		$country = !empty($gateway_settings['everypay_iris_country'])
+			? strtoupper(sanitize_text_field($gateway_settings['everypay_iris_country']))
+			: 'GR';
 		if (empty($country)) {
 			$country = WC()->countries->get_base_country();
 		}
@@ -656,9 +651,10 @@ function everypay_create_iris_session()
 			'currency' => $currency,
 			'country' => $country,
 			'callback_url' => $callback_url,
+			'webhook_url' => $webhook_url,
 		);
 
-		$md_reference = method_exists($gateway, 'get_iris_md_reference') ? $gateway->get_iris_md_reference() : '';
+		$md_reference = everypay_get_iris_reference();
 
 		if (!empty($md_reference)) {
 			$params['md'] = $md_reference;
@@ -672,7 +668,9 @@ function everypay_create_iris_session()
 			$params['md'] = sanitize_text_field(wp_unslash($_POST['md']));
 		}
 
-		$secret_key = $gateway->get_secret_key();
+		$secret_key = isset($gateway_settings['everypaySecretKey'])
+			? sanitize_text_field($gateway_settings['everypaySecretKey'])
+			: '';
 		if (empty($secret_key)) {
 			wp_send_json_error(['message' => 'IRIS session failed: secret key is missing.']);
 			wp_die();

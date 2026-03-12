@@ -96,7 +96,7 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 		$this->everypay_sandbox = $this->get_option('everypay_sandbox');
 		$this->iris_enabled = $this->get_option('everypay_iris_enabled') === 'yes';
 		$this->iris_merchant_name = sanitize_text_field($this->get_option('everypay_iris_merchant_name'));
-		$this->iris_callback_url = esc_url_raw(admin_url('admin-ajax.php?action=everypay_iris_callback'));
+		$this->iris_callback_url = self::get_iris_notification_url();
 		$this->iris_country = 'GR';
 
 		if ($this->iris_enabled) {
@@ -553,6 +553,11 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 		$this->form_fields = require plugin_dir_path(__FILE__) . '../admin/wc-admin-form-fields.php';
 	}
 
+	public static function get_iris_notification_url(): string
+	{
+		return esc_url_raw(admin_url('admin-ajax.php?action=everypay_iris_callback'));
+	}
+
 
 	public function admin_options()
 	{
@@ -641,6 +646,11 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 	}
 
 	public function get_iris_callback_url(): string
+	{
+		return $this->iris_callback_url;
+	}
+
+	public function get_iris_webhook_url(): string
 	{
 		return $this->iris_callback_url;
 	}

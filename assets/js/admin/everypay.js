@@ -185,6 +185,7 @@ jQuery(document).ready(function ($) {
     function toggleIrisFields() {
         const enabled = $('#woocommerce_everypay_everypay_iris_enabled').is(':checked');
         $('#woocommerce_everypay_everypay_iris_merchant_name').closest('tr').toggle(enabled);
+        $('#woocommerce_everypay_everypay_iris_webhook_url').closest('tr').toggle(enabled);
     }
 
     toggleIrisFields();

@@ -174,7 +174,7 @@ class WC_Everypay_Blocks_Support extends \Automattic\WooCommerce\Blocks\Payments
 
 			return array(
 				'merchantName' => sanitize_text_field($this->settings['everypay_iris_merchant_name'] ?? ''),
-				'callbackUrl' => esc_url_raw(admin_url('admin-ajax.php?action=everypay_iris_callback')),
+				'callbackUrl' => WC_Everypay_Gateway::get_iris_notification_url(),
 				'country' => 'GR',
 				'ajaxUrl' => admin_url('admin-ajax.php'),
 				'nonce' => wp_create_nonce('everypay_create_iris_session'),

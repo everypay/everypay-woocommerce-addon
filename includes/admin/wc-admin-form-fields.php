@@ -172,6 +172,19 @@ return [
 		'description' => 'Displayed inside the IRIS flow.',
 		'wrapper_class' => 'hide-if-iris-disabled',
 	],
+	'everypay_iris_webhook_url' => [
+		'title' => 'IRIS Webhook URL',
+		'type' => 'text',
+		'default' => WC_Everypay_Gateway::get_iris_notification_url(),
+		'description' => 'Copy this URL into the EveryPay dashboard webhook configuration. The plugin also sends it automatically when creating IRIS sessions.',
+		'desc_tip' => true,
+		'custom_attributes' => [
+			'readonly' => 'readonly',
+			'onclick' => 'this.select();',
+		],
+		'css' => 'width: 100%;',
+		'wrapper_class' => 'hide-if-iris-disabled',
+	],
 	'everypay_maximum_installments' => [
 		'title' => 'Everypay Installments',
 		'type' => 'hidden',
