@@ -12,6 +12,52 @@
 if (!defined('ABSPATH'))
     exit;
 
+function everypay_recalculate_serialized_string_lengths($value)
+{
+	if (!is_string($value) || $value === '') {
+		return $value;
+	}
+
+	return preg_replace_callback('/s:\d+:"(.*?)";/s', function ($matches) {
+		return 's:' . strlen($matches[1]) . ':"' . $matches[1] . '";';
+	}, $value);
+}
+
+function everypay_get_gateway_settings()
+{
+	$settings = get_option('woocommerce_everypay_settings', null);
+	if (is_array($settings)) {
+		return $settings;
+	}
+
+	global $wpdb;
+	$option_name = 'woocommerce_everypay_settings';
+	$raw_settings = $wpdb->get_var(
+		$wpdb->prepare(
+			"SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
+			$option_name
+		)
+	);
+
+	if (!is_string($raw_settings) || $raw_settings === '') {
+		return array();
+	}
+
+	$repaired_settings = @unserialize(everypay_recalculate_serialized_string_lengths($raw_settings));
+	if (!is_array($repaired_settings)) {
+		return array();
+	}
+
+	update_option($option_name, $repaired_settings, false);
+
+	return $repaired_settings;
+}
+
+function everypay_maybe_repair_gateway_settings_option()
+{
+	everypay_get_gateway_settings();
+}
+
 function debug($message, ...$params)
 {
     static $stdout;
@@ -64,6 +110,7 @@ function everypay_woocommerce_missing_notice() {
 
 function everypay_init()
 {
+	everypay_maybe_repair_gateway_settings_option();
 
     if ( ! class_exists( 'WooCommerce' ) || ! class_exists('WC_Payment_Gateway')) {
         add_action( 'admin_notices', 'everypay_woocommerce_missing_notice' );
@@ -124,6 +171,8 @@ add_action('wp_ajax_everypay_create_iris_session', 'everypay_create_iris_session
 add_action('wp_ajax_nopriv_everypay_create_iris_session', 'everypay_create_iris_session');
 add_action('wp_ajax_everypay_iris_callback', 'everypay_handle_iris_callback_request');
 add_action('wp_ajax_nopriv_everypay_iris_callback', 'everypay_handle_iris_callback_request');
+add_action('parse_request', 'everypay_maybe_handle_iris_callback_route');
+add_action('parse_request', 'everypay_maybe_handle_iris_webhook_route');
 add_action('woocommerce_before_checkout_form', 'everypay_print_iris_error_notice', 5);
 
 function everypay_declare_blocks_compatibility()
@@ -249,16 +298,86 @@ function everypay_send_iris_json_response(bool $success, array $data = array(), 
 	return;
 }
 
-function everypay_get_gateway_settings(): array
+function everypay_get_iris_callback_request_path(): string
 {
-	$settings = get_option('woocommerce_everypay_settings', array());
-	return is_array($settings) ? $settings : array();
+	if (!class_exists('WC_Everypay_Gateway')) {
+		return '/everypay-iris-callback';
+	}
+
+	$callback_url = WC_Everypay_Gateway::get_iris_callback_endpoint_url();
+	$path = wp_parse_url($callback_url, PHP_URL_PATH);
+
+	if (!is_string($path) || $path === '') {
+		return '/everypay-iris-callback';
+	}
+
+	return untrailingslashit($path);
+}
+
+function everypay_get_iris_webhook_request_path(): string
+{
+	if (!class_exists('WC_Everypay_Gateway')) {
+		return '/everypay-iris-webhook';
+	}
+
+	$webhook_url = WC_Everypay_Gateway::get_iris_webhook_endpoint_url();
+	$path = wp_parse_url($webhook_url, PHP_URL_PATH);
+
+	if (!is_string($path) || $path === '') {
+		return '/everypay-iris-webhook';
+	}
+
+	return untrailingslashit($path);
+}
+
+function everypay_maybe_handle_iris_callback_route()
+{
+	if (empty($_SERVER['REQUEST_URI'])) {
+		return;
+	}
+
+	$request_path = wp_parse_url(wp_unslash($_SERVER['REQUEST_URI']), PHP_URL_PATH);
+	if (!is_string($request_path) || $request_path === '') {
+		return;
+	}
+
+	if (untrailingslashit($request_path) !== everypay_get_iris_callback_request_path()) {
+		return;
+	}
+
+	everypay_handle_iris_callback_request(true);
+	exit;
+}
+
+function everypay_maybe_handle_iris_webhook_route()
+{
+	if (empty($_SERVER['REQUEST_URI'])) {
+		return;
+	}
+
+	$request_path = wp_parse_url(wp_unslash($_SERVER['REQUEST_URI']), PHP_URL_PATH);
+	if (!is_string($request_path) || $request_path === '') {
+		return;
+	}
+
+	if (untrailingslashit($request_path) !== everypay_get_iris_webhook_request_path()) {
+		return;
+	}
+
+	everypay_handle_iris_callback_request(false);
+	exit;
 }
 
 function everypay_is_iris_enabled_in_settings(): bool
 {
 	$settings = everypay_get_gateway_settings();
 	return ($settings['everypay_iris_enabled'] ?? 'no') === 'yes';
+}
+
+function everypay_is_sandbox_mode_enabled(): bool
+{
+	$settings = everypay_get_gateway_settings();
+	return ($settings['everypay_sandbox'] ?? 'no') === 'yes';
 }
 
 function everypay_get_iris_reference(): string
@@ -323,7 +442,7 @@ function register_apple_pay_merchant_domain()
 }
 
 
-function everypay_handle_iris_callback_request()
+function everypay_handle_iris_callback_request(bool $redirect_to_order_received = true)
 {
 	nocache_headers();
 
@@ -335,8 +454,8 @@ function everypay_handle_iris_callback_request()
 
 		if ($order instanceof WC_Order) {
 			$redirect_url = $order->get_checkout_order_received_url();
-			if (!empty($redirect_url)) {
-				wp_safe_redirect($redirect_url);
+			if ($redirect_to_order_received && !empty($redirect_url)) {
+				wp_safe_redirect($redirect_url, 303);
 				exit;
 			}
 		}
@@ -493,7 +612,7 @@ function everypay_handle_iris_callback_request()
 						require_once plugin_dir_path(__FILE__) . 'includes/class-wc-everypay-api.php';
 					}
 					WC_Everypay_Api::setApiKey($secret_key);
-					if (defined('EVERYPAY_SANDBOX') && EVERYPAY_SANDBOX) {
+					if (everypay_is_sandbox_mode_enabled()) {
 						WC_Everypay_Api::setTestMode();
 					}
 
@@ -569,6 +688,12 @@ function everypay_handle_iris_callback_request()
 
 			if (!$has_error) {
 				everypay_clear_iris_error_notice();
+				$redirect_url = $order->get_checkout_order_received_url();
+				if ($redirect_to_order_received && !empty($redirect_url)) {
+					wp_safe_redirect($redirect_url, 303);
+					exit;
+				}
+
 				everypay_send_iris_json_response(true, ['order_id' => $order->get_id()]);
 				return;
 			}
@@ -628,8 +753,8 @@ function everypay_create_iris_session()
 			? strtoupper(sanitize_text_field(wp_unslash($_POST['currency'])))
 			: get_woocommerce_currency();
 
-		$callback_url = WC_Everypay_Gateway::get_iris_notification_url();
-		$webhook_url = WC_Everypay_Gateway::get_iris_notification_url();
+		$callback_url = WC_Everypay_Gateway::get_iris_callback_endpoint_url();
+		$webhook_url = WC_Everypay_Gateway::get_iris_webhook_endpoint_url();
 		if (empty($callback_url)) {
 			wp_send_json_error(['message' => 'IRIS session failed: callback URL is missing.']);
 			wp_die();
@@ -677,7 +802,7 @@ function everypay_create_iris_session()
 		}
 
 		WC_Everypay_Api::setApiKey($secret_key);
-		if (defined('EVERYPAY_SANDBOX') && EVERYPAY_SANDBOX) {
+		if (everypay_is_sandbox_mode_enabled()) {
 			WC_Everypay_Api::setTestMode();
 		}
 

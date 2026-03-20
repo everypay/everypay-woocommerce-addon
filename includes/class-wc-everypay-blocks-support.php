@@ -25,7 +25,7 @@ class WC_Everypay_Blocks_Support extends \Automattic\WooCommerce\Blocks\Payments
 
 		public function initialize()
 		{
-			$this->settings = get_option('woocommerce_everypay_settings', array());
+			$this->settings = everypay_get_gateway_settings();
 		}
 
 		public function is_active()
@@ -174,7 +174,7 @@ class WC_Everypay_Blocks_Support extends \Automattic\WooCommerce\Blocks\Payments
 
 			return array(
 				'merchantName' => sanitize_text_field($this->settings['everypay_iris_merchant_name'] ?? ''),
-				'callbackUrl' => WC_Everypay_Gateway::get_iris_notification_url(),
+				'callbackUrl' => WC_Everypay_Gateway::get_iris_callback_endpoint_url(),
 				'country' => 'GR',
 				'ajaxUrl' => admin_url('admin-ajax.php'),
 				'nonce' => wp_create_nonce('everypay_create_iris_session'),

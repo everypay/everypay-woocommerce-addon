@@ -41,22 +41,6 @@ class WC_Everypay_Admin
 			}
 		}
 
-		if (
-			isset($_GET['page'], $_GET['tab'], $_GET['section'], $_GET['everypay_debug_settings'])
-			&& $_GET['page'] === 'wc-settings'
-			&& $_GET['tab'] === 'checkout'
-			&& in_array($_GET['section'], array('wc_everypay_gateway', 'everypay'), true)
-			&& $_GET['everypay_debug_settings'] === '1'
-		) {
-			ob_start();
-			var_dump(get_option('woocommerce_everypay_settings'));
-			$settings_dump = ob_get_clean();
-
-			echo '<div class="notice notice-info"><pre style="white-space: pre-wrap; overflow: auto;">'
-			     . esc_html($settings_dump)
-			     . '</pre></div>';
-		}
-
 	}
 
 	public function load_admin_css()

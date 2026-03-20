@@ -14,7 +14,6 @@ function EverypayModal(EVDATA) {
             this.createHtml();
             this.setEvents();
         } catch (e) {
-            console.log(e)
         }
     };
 
@@ -53,7 +52,6 @@ function EverypayModal(EVDATA) {
                 loading_text = this.loading_text;
             }
             if (document.getElementById('loader-everypay')) {
-                console.log('everypay-loader has been already loaded.')
                 return;
             }
             var everypayLoader = document.createElement('div');
