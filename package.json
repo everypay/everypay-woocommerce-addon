@@ -1,0 +1,10 @@
+{
+  "name": "everypay-woocommerce-addon",
+  "private": true,
+  "scripts": {
+    "test:js": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  }
+}

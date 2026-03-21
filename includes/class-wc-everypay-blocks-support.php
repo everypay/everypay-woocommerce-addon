@@ -40,9 +40,17 @@ class WC_Everypay_Blocks_Support extends \Automattic\WooCommerce\Blocks\Payments
 			$this->register_everypay_scripts();
 
 			wp_register_script(
+				'everypay-blocks-utils',
+				plugins_url('assets/js/blocks/everypay-blocks-utils.js', dirname(__FILE__)),
+				array(),
+				defined('EVERYPAY_PLUGIN_VERSION') ? EVERYPAY_PLUGIN_VERSION : '3.8',
+				true
+			);
+
+			wp_register_script(
 				'everypay-blocks-integration',
 				plugins_url('assets/js/blocks/everypay-blocks.js', dirname(__FILE__)),
-				array('everypay', 'wc-blocks-registry', 'wc-settings', 'wp-element', 'wp-html-entities', 'wp-i18n'),
+				array('everypay', 'everypay-blocks-utils', 'wc-blocks-registry', 'wc-settings', 'wp-element', 'wp-html-entities', 'wp-i18n'),
 				defined('EVERYPAY_PLUGIN_VERSION') ? EVERYPAY_PLUGIN_VERSION : '3.8',
 				true
 			);
