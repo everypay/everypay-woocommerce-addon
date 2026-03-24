@@ -69,6 +69,11 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 	/**
 	 * @var string
 	 */
+	private $iris_webhook_url = '';
+
+	/**
+	 * @var string
+	 */
 	private $iris_country = '';
 
 	/**
@@ -96,7 +101,8 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 		$this->everypay_sandbox = $this->get_option('everypay_sandbox');
 		$this->iris_enabled = $this->get_option('everypay_iris_enabled') === 'yes';
 		$this->iris_merchant_name = sanitize_text_field($this->get_option('everypay_iris_merchant_name'));
-		$this->iris_callback_url = esc_url_raw(admin_url('admin-ajax.php?action=everypay_iris_callback'));
+		$this->iris_callback_url = self::get_iris_callback_endpoint_url();
+		$this->iris_webhook_url = self::get_iris_webhook_endpoint_url();
 		$this->iris_country = 'GR';
 
 		if ($this->iris_enabled) {
@@ -162,6 +168,7 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 		add_filter('woocommerce_available_payment_gateways', array($this, 'disable_everypay_if_keys_not_set'));
 		add_filter('query_vars', array($this, 'add_everypay_var'));
 		add_action('wp_enqueue_scripts', array($this, 'add_everypay_js'));
+		add_action('woocommerce_rest_checkout_process_payment_with_context', array($this, 'hydrate_block_payment_data'), 10, 2);
 
 		if (is_admin()) {
 			new WC_Everypay_Admin($this->everypayPublicKey, $this->everypaySecretKey);
@@ -238,6 +245,84 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 		return is_string($token) && strpos($token, 'src_') === 0;
 	}
 
+	private function get_request_value($key)
+	{
+		if (isset($_POST[$key])) {
+			return wp_unslash($_POST[$key]);
+		}
+
+		if (isset($_POST['payment_data']) && is_array($_POST['payment_data'])) {
+			$payment_data = $this->normalize_payment_data($_POST['payment_data']);
+			if (isset($payment_data[$key])) {
+				return wp_unslash($payment_data[$key]);
+			}
+		}
+
+		$raw_body = file_get_contents('php://input');
+		if (!is_string($raw_body) || $raw_body === '') {
+			return null;
+		}
+
+		$decoded = json_decode($raw_body, true);
+		if (!is_array($decoded)) {
+			return null;
+		}
+
+		if (isset($decoded[$key])) {
+			return $decoded[$key];
+		}
+
+		if (isset($decoded['payment_data']) && is_array($decoded['payment_data'])) {
+			$payment_data = $this->normalize_payment_data($decoded['payment_data']);
+			if (isset($payment_data[$key])) {
+				return $payment_data[$key];
+			}
+		}
+
+		return null;
+	}
+
+	private function normalize_payment_data($payment_data)
+	{
+		if (!is_array($payment_data)) {
+			return array();
+		}
+
+		$is_key_value_list = isset($payment_data[0]) && is_array($payment_data[0]) && array_key_exists('key', $payment_data[0]);
+		if (!$is_key_value_list) {
+			return $payment_data;
+		}
+
+		$normalized = array();
+		foreach ($payment_data as $entry) {
+			if (!is_array($entry) || !isset($entry['key'])) {
+				continue;
+			}
+
+			$normalized[$entry['key']] = $entry['value'] ?? null;
+		}
+
+		return $normalized;
+	}
+
+	public function hydrate_block_payment_data($context, $result)
+	{
+		if (!is_object($context) || !isset($context->payment_method) || $context->payment_method !== $this->id) {
+			return;
+		}
+
+		if (!isset($context->payment_data) || !is_array($context->payment_data)) {
+			return;
+		}
+
+		$payment_data = $this->normalize_payment_data($context->payment_data);
+		foreach ($payment_data as $key => $value) {
+			if (!isset($_POST[$key])) {
+				$_POST[$key] = $value;
+			}
+		}
+	}
+
 	/*
      *  Process the payment
      *
@@ -246,9 +331,30 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 	public function process_payment($order_id)
 	{
 		try {
-			if (isset($_POST['delete_card']) && is_user_logged_in() && $this->tokenization_status == 'yes') {
+			$delete_card = $this->get_request_value('delete_card');
+			$everypay_token = $this->get_request_value('everypayToken');
+			$save_card = $this->get_request_value('everypay_save_card');
+			$tokenized_card = $this->get_request_value('tokenized-card');
+
+			if (!is_scalar($delete_card)) {
+				$delete_card = null;
+			}
+
+			if (!is_scalar($everypay_token)) {
+				$everypay_token = null;
+			}
+
+			if (!is_scalar($save_card)) {
+				$save_card = null;
+			}
+
+			if (!is_scalar($tokenized_card)) {
+				$tokenized_card = null;
+			}
+
+			if (!empty($delete_card) && is_user_logged_in() && $this->tokenization_status == 'yes') {
 				$user_id = get_current_user_id();
-				(new WC_Everypay_Tokenization())->delete_card($_POST['delete_card'], $user_id);
+				(new WC_Everypay_Tokenization())->delete_card(sanitize_text_field($delete_card), $user_id);
 				return array(
 					'result' => 'success',
 					'messages' => '<div class=""></div>'
@@ -261,13 +367,12 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 				$wc_order->save();
 			}
 
-			if (!isset($_POST['everypayToken']) || empty($_POST['everypayToken'])) {
+			if (empty($everypay_token)) {
 				$this->renderer->render_iframe(WC()->cart->total, $this->max_installments);
 				exit;
 			}
 
-			$token = sanitize_text_field($_POST['everypayToken']);
-			unset($_POST['everypayToken']);
+			$token = sanitize_text_field($everypay_token);
 			WC_Everypay_Api::setApiKey($this->everypaySecretKey);
 			$is_iris_payment = $this->is_iris_token($token);
 
@@ -281,7 +386,7 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 
 			$payload = $this->create_payload($wc_order, $token);
 
-			if (!$is_iris_payment && is_user_logged_in() && (isset($_POST['everypay_save_card']) || isset($_POST['tokenized-card'])) && $this->tokenization_status == 'yes') {
+			if (!$is_iris_payment && is_user_logged_in() && (!empty($save_card) || !empty($tokenized_card)) && $this->tokenization_status == 'yes') {
 				(new WC_Everypay_Repository())->save_logs('tokenization_payment', implode(" ", $payload));
 				$user_id = $wc_order->get_user_id();
 				$everypay_tokenization = new WC_Everypay_Tokenization();
@@ -454,6 +559,21 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 		$this->form_fields = require plugin_dir_path(__FILE__) . '../admin/wc-admin-form-fields.php';
 	}
 
+	public static function get_iris_callback_endpoint_url(): string
+	{
+		return esc_url_raw(home_url('/everypay-iris-callback/'));
+	}
+
+	public static function get_iris_webhook_endpoint_url(): string
+	{
+		return esc_url_raw(home_url('/everypay-iris-webhook/'));
+	}
+
+	public static function get_iris_notification_url(): string
+	{
+		return self::get_iris_webhook_endpoint_url();
+	}
+
 
 	public function admin_options()
 	{
@@ -544,6 +664,11 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 	public function get_iris_callback_url(): string
 	{
 		return $this->iris_callback_url;
+	}
+
+	public function get_iris_webhook_url(): string
+	{
+		return $this->iris_webhook_url;
 	}
 
 	public function get_iris_country(): string
