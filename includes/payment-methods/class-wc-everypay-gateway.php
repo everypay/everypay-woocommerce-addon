@@ -399,7 +399,7 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 					'md' => $this->iris_md,
 				));
 
-				if (!empty($this->iris_md) && !$wc_order->get_meta('everypay_iris_md')) {
+				if (!empty($this->iris_md) && $wc_order->get_meta('everypay_iris_md') !== $this->iris_md) {
 					$wc_order->update_meta_data('everypay_iris_md', $this->iris_md);
 					$wc_order->save();
 				}

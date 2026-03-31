@@ -333,6 +333,44 @@ function everypay_get_current_checkout_order()
     return $order instanceof WC_Order ? $order : null;
 }
 
+function everypay_ensure_checkout_order()
+{
+    $order = everypay_get_current_checkout_order();
+    if ($order instanceof WC_Order) {
+        return $order;
+    }
+
+    if (!function_exists('WC') || !WC() || !WC()->session || !function_exists('wc_get_order')) {
+        return null;
+    }
+
+    if (!class_exists('\Automattic\WooCommerce\StoreApi\Utilities\OrderController')) {
+        return null;
+    }
+
+    if (!WC()->cart || WC()->cart->is_empty()) {
+        return null;
+    }
+
+    try {
+        $order_controller = new \Automattic\WooCommerce\StoreApi\Utilities\OrderController();
+        $order = $order_controller->create_order_from_cart();
+
+        if (!$order instanceof WC_Order) {
+            return null;
+        }
+
+        WC()->session->set('store_api_draft_order', $order->get_id());
+        if (method_exists(WC()->session, 'set_customer_session_cookie')) {
+            WC()->session->set_customer_session_cookie(true);
+        }
+
+        return $order;
+    } catch (Exception $exception) {
+        return null;
+    }
+}
+
 function everypay_find_order_by_iris_reference_with_retry(string $token = '', string $md = '', int $attempts = 8, int $delay_microseconds = 250000)
 {
     $attempts = max(1, $attempts);
@@ -432,6 +470,43 @@ function everypay_prepare_iris_order_received_redirect(WC_Order $order): string
     return everypay_get_iris_order_received_redirect_url($order);
 }
 
+function everypay_get_iris_order_payment_redirect_url(WC_Order $order): string
+{
+    $redirect_url = $order->get_checkout_payment_url();
+    $order_key = $order->get_order_key();
+
+    if (!empty($order_key)) {
+        $redirect_url = add_query_arg('key', $order_key, $redirect_url);
+    }
+
+    return (string) $redirect_url;
+}
+
+function everypay_prepare_iris_order_payment_redirect(WC_Order $order): string
+{
+    if (function_exists('WC') && WC()) {
+        if (WC()->session) {
+            $customer = WC()->session->get('customer');
+            if (!is_array($customer)) {
+                $customer = array();
+            }
+
+            $billing_email = $order->get_billing_email();
+            if (!empty($billing_email)) {
+                $customer['email'] = sanitize_email($billing_email);
+                WC()->session->set('customer', $customer);
+            }
+
+            WC()->session->set('order_awaiting_payment', $order->get_id());
+            if (method_exists(WC()->session, 'set_customer_session_cookie')) {
+                WC()->session->set_customer_session_cookie(true);
+            }
+        }
+    }
+
+    return everypay_get_iris_order_payment_redirect_url($order);
+}
+
 function everypay_maybe_skip_iris_order_email_verification(bool $required, WC_Order $order, string $context): bool
 {
     if (!$required || $context !== 'order-received') {
@@ -446,6 +521,14 @@ function everypay_maybe_skip_iris_order_email_verification(bool $required, WC_Or
     }
 
     if (!hash_equals($order->get_order_key(), $order_key)) {
+        return $required;
+    }
+
+    $payment_method = (string) $order->get_meta('everypay_payment_method');
+    $iris_reference = (string) $order->get_meta('everypay_iris_md');
+    $is_iris_order = $payment_method === 'iris' || $iris_reference !== '';
+
+    if (!$is_iris_order) {
         return $required;
     }
 
@@ -870,6 +953,16 @@ function everypay_handle_iris_callback_request(bool $redirect_to_order_received 
     if ($has_error) {
         $message = $error_message ?: __('IRIS payment failed. Please try another payment method.', 'everypay');
         $message = sanitize_text_field($message);
+
+        if ($redirect_to_order_received && $order instanceof WC_Order) {
+            everypay_set_iris_error_notice($message);
+            $redirect_url = everypay_prepare_iris_order_payment_redirect($order);
+            if (!empty($redirect_url)) {
+                wp_safe_redirect($redirect_url, 303);
+                exit;
+            }
+        }
+
         everypay_send_iris_json_response(false, ['message' => $message], 422);
         return;
     }
@@ -945,9 +1038,12 @@ function everypay_create_iris_session()
         if (!empty($md_reference)) {
             $params['md'] = $md_reference;
 
-            $checkout_order = everypay_get_current_checkout_order();
-            if ($checkout_order instanceof WC_Order && !$checkout_order->get_meta('everypay_iris_md')) {
-                $checkout_order->update_meta_data('everypay_iris_md', $md_reference);
+            $checkout_order = everypay_ensure_checkout_order();
+            if ($checkout_order instanceof WC_Order) {
+                $saved_reference = (string) $checkout_order->get_meta('everypay_iris_md');
+                if ($saved_reference !== $md_reference) {
+                    $checkout_order->update_meta_data('everypay_iris_md', $md_reference);
+                }
                 $checkout_order->save();
             }
         }
