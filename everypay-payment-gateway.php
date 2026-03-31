@@ -299,7 +299,7 @@ function everypay_find_order_by_iris_reference(string $token = '', string $md = 
             $order = wc_get_order($order_id);
             if ($order instanceof WC_Order) {
                 $saved_reference = (string) $order->get_meta('everypay_iris_md');
-                if ($saved_reference === '' || hash_equals($saved_reference, $md) || everypay_extract_iris_order_id($saved_reference) === $order_id) {
+                if ($saved_reference !== '' && hash_equals($saved_reference, $md)) {
                     return $order;
                 }
             }
