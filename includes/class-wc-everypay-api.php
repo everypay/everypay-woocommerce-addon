@@ -133,7 +133,7 @@ class WC_Everypay_Api
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
             'User-Agent: EveryPay Internal PHP Library'
         ));
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
 
         curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         curl_setopt($curl, CURLOPT_USERPWD, $apiKey . ':');
@@ -167,7 +167,7 @@ class WC_Everypay_Api
         $response['status'] = $info['http_code'];
         $response['body']   = json_decode($result, true);
 
-       	if ((!isset($response['body']) || empty($response['body'])) && $response['status'] !== 204) {
+        if ((!isset($response['body']) || empty($response['body'])) && $response['status'] !== 204) {
             throw new Exception('response body is empty. ' . $query);
         }
 
@@ -178,21 +178,21 @@ class WC_Everypay_Api
         return $response;
     }
 
-	public static function registerApplePayMerchantDomain(string $domain): array
-	{
-		$url = self::getApiEndPoint() . '/applepay/domains';
+    public static function registerApplePayMerchantDomain(string $domain): array
+    {
+        $url = self::getApiEndPoint() . '/applepay/domains';
 
-		return self::request($url, [
-			'domain_names' => [
-				$domain,
-			],
-		]);
-	}
+        return self::request($url, [
+            'domain_names' => [
+                $domain,
+            ],
+        ]);
+    }
 
-	public static function createIrisSession(array $params): array
-	{
-		$url = self::getApiEndPoint() . '/iris/sessions';
+    public static function createIrisSession(array $params): array
+    {
+        $url = self::getApiEndPoint() . '/iris/sessions';
 
-		return self::request($url, $params);
-	}
+        return self::request($url, $params);
+    }
 }
