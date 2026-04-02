@@ -755,10 +755,10 @@ function everypay_handle_iris_callback_request(array $requestData, bool $redirec
         // Failing to log should not block the callback.
     }
 
-    $token = isset($payload_array['token']) ? sanitize_text_field($payload_array['token']) : (isset($post_data['token']) ? sanitize_text_field($post_data['token']) : '');
-    $md = isset($payload_array['md']) ? sanitize_text_field($payload_array['md']) : (isset($post_data['md']) ? sanitize_text_field($post_data['md']) : '');
-    $error_status = isset($payload_array['error_status']) ? sanitize_text_field($payload_array['error_status']) : (isset($post_data['error_status']) ? sanitize_text_field($post_data['error_status']) : '');
-    $error_message = isset($payload_array['error_message']) ? sanitize_text_field($payload_array['error_message']) : (isset($post_data['error_message']) ? sanitize_text_field($post_data['error_message']) : '');
+    $token = isset($payload_array['token']) ? sanitize_text_field($payload_array['token']) : '';
+    $md = isset($payload_array['md']) ? sanitize_text_field($payload_array['md']) : '';
+    $error_status = isset($payload_array['error_status']) ? sanitize_text_field($payload_array['error_status']) : '';
+    $error_message = isset($payload_array['error_message']) ? sanitize_text_field($payload_array['error_message']) : '';
     $has_error = !empty($error_status) || (!empty($error_message) && empty($token));
     $order = null;
 
@@ -951,6 +951,7 @@ function everypay_handle_iris_callback_request(array $requestData, bool $redirec
 
     everypay_send_iris_json_response(true);
 }
+
 function everypay_create_iris_session()
 {
     try {
