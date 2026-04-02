@@ -76,6 +76,10 @@ class WC_Everypay_Api
             self::$apiEndPoint = 'https://' . (self::isTestMode() ? 'sandbox-' : '') . 'api.everypay.gr';
         }
 
+        if (defined('EVP_LOCAL_DEVELOPMENT')) {
+            self::$apiEndPoint = 'http://api.everypay.local';
+        }
+
         return self::$apiEndPoint;
     }
 
@@ -119,7 +123,7 @@ class WC_Everypay_Api
      * @param  string $method
      * @return array
      */
-    private static function request(string $url, array $params = array(), string $method = 'POST')
+    private static function request(string $url, array $params = [], string $method = 'POST')
     {
         $apiKey = self::getApiKey();
 
@@ -130,9 +134,9 @@ class WC_Everypay_Api
         $curl   = curl_init();
         curl_setopt($curl, CURLOPT_TIMEOUT, 30);
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, strtoupper($method));
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-            'User-Agent: EveryPay Internal PHP Library'
-        ));
+        curl_setopt($curl, CURLOPT_HTTPHEADER, [
+            'User-Agent: EveryPay Internal PHP Library',
+        ]);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 
         curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
@@ -153,7 +157,7 @@ class WC_Everypay_Api
         $result   = curl_exec($curl);
         $info     = curl_getinfo($curl);
 
-        $response = array();
+        $response = [];
 
         if (curl_errno($curl)) {
             $curlError = curl_error($curl);
@@ -167,7 +171,7 @@ class WC_Everypay_Api
         $response['status'] = $info['http_code'];
         $response['body']   = json_decode($result, true);
 
-       	if ((!isset($response['body']) || empty($response['body'])) && $response['status'] !== 204) {
+        if ((!isset($response['body']) || empty($response['body'])) && $response['status'] !== 204) {
             throw new Exception('response body is empty. ' . $query);
         }
 
@@ -178,21 +182,21 @@ class WC_Everypay_Api
         return $response;
     }
 
-	public static function registerApplePayMerchantDomain(string $domain): array
-	{
-		$url = self::getApiEndPoint() . '/applepay/domains';
+    public static function registerApplePayMerchantDomain(string $domain): array
+    {
+        $url = self::getApiEndPoint() . '/applepay/domains';
 
-		return self::request($url, [
-			'domain_names' => [
-				$domain,
-			],
-		]);
-	}
+        return self::request($url, [
+            'domain_names' => [
+                $domain,
+            ],
+        ]);
+    }
 
-	public static function createIrisSession(array $params): array
-	{
-		$url = self::getApiEndPoint() . '/iris/sessions';
+    public static function createIrisSession(array $params): array
+    {
+        $url = self::getApiEndPoint() . '/iris/sessions';
 
-		return self::request($url, $params);
-	}
+        return self::request($url, $params);
+    }
 }
