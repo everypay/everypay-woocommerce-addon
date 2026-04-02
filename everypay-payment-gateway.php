@@ -173,8 +173,8 @@ add_action('woocommerce_blocks_payment_method_type_registration', 'everypay_regi
 add_action('wp_ajax_register_apple_pay_merchant_domain', 'register_apple_pay_merchant_domain');
 add_action('wp_ajax_everypay_create_iris_session', 'everypay_create_iris_session');
 add_action('wp_ajax_nopriv_everypay_create_iris_session', 'everypay_create_iris_session');
-add_action('wp_ajax_everypay_iris_callback', 'everypay_handle_iris_callback_request');
-add_action('wp_ajax_nopriv_everypay_iris_callback', 'everypay_handle_iris_callback_request');
+add_action('wp_ajax_everypay_iris_callback', 'everypay_handle_iris_ajax_callback');
+add_action('wp_ajax_nopriv_everypay_iris_callback', 'everypay_handle_iris_ajax_callback');
 add_action('parse_request', 'everypay_maybe_handle_iris_callback_route');
 add_action('parse_request', 'everypay_maybe_handle_iris_webhook_route');
 add_action('woocommerce_before_checkout_form', 'everypay_print_iris_error_notice', 5);
@@ -567,6 +567,11 @@ function everypay_get_iris_webhook_request_path(): string
     return untrailingslashit($path);
 }
 
+function everypay_handle_iris_ajax_callback()
+{
+    everypay_handle_iris_callback_request($_POST, true);
+}
+
 function everypay_maybe_handle_iris_callback_route()
 {
     if (empty($_SERVER['REQUEST_URI'])) {
@@ -780,7 +785,9 @@ function everypay_handle_iris_callback_request(array $requestData, bool $redirec
                         require_once plugin_dir_path(__FILE__) . 'includes/class-wc-everypay-helpers.php';
                     }
 
+                    error_log('===> TOTAL: ' . print_r($order->get_total(), true));
                     $helpers = new WC_Everypay_Helpers();
+                    error_log('===> FORMATTED TOTAL: ' . print_r($helpers->format_amount($order->get_total()), true));
                     $amount = $helpers->format_amount($order->get_total());
 
                     if (empty($amount)) {
@@ -954,6 +961,8 @@ function everypay_handle_iris_callback_request(array $requestData, bool $redirec
 
 function everypay_create_iris_session()
 {
+    $wcEverypayGateway = new WC_Everypay_Gateway();
+
     try {
         if (!isset($_POST['_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_nonce'])), 'everypay_create_iris_session')) {
             wp_send_json_error(['message' => 'Invalid nonce.']);
@@ -989,8 +998,8 @@ function everypay_create_iris_session()
             ? strtoupper(sanitize_text_field(wp_unslash($_POST['currency'])))
             : get_woocommerce_currency();
 
-        $callback_url = WC_Everypay_Gateway::get_iris_callback_endpoint_url();
-        $webhook_url = WC_Everypay_Gateway::get_iris_webhook_endpoint_url();
+        $callback_url = $wcEverypayGateway->get_iris_callback_url();
+        $webhook_url = $wcEverypayGateway->get_iris_webhook_url();
         if (empty($callback_url)) {
             wp_send_json_error(['message' => 'IRIS session failed: callback URL is missing.']);
             wp_die();
