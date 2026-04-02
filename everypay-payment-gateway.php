@@ -689,31 +689,7 @@ function register_apple_pay_merchant_domain()
 
 function everypay_handle_iris_callback_request(array $requestData, bool $redirect_to_order_received = true)
 {
-    error_log('GET => ' . print_r($_GET, true));
-    error_log('POST => ' . print_r($_POST, true));
-    error_log('INPUT => ' . print_r(file_get_contents('php://input'), true));
-
     nocache_headers();
-
-    /* if ('GET' === $_SERVER['REQUEST_METHOD']) { */
-    /*     $token = isset($_GET['token']) ? sanitize_text_field(wp_unslash($_GET['token'])) : ''; */
-    /*     $md = isset($_GET['md']) ? sanitize_text_field(wp_unslash($_GET['md'])) : ''; */
-    /**/
-    /*     $order = everypay_find_order_by_iris_reference_with_retry($token, $md); */
-    /**/
-    /*     if ($order instanceof WC_Order) { */
-    /*         $redirect_url = everypay_prepare_iris_order_received_redirect($order); */
-    /*         if ($redirect_to_order_received && !empty($redirect_url)) { */
-    /*             wp_safe_redirect($redirect_url, 303); */
-    /*             exit; */
-    /*         } */
-    /*     } */
-    /**/
-    /*     status_header(200); */
-    /*     header('Content-Type: application/json; charset=utf-8'); */
-    /*     echo wp_json_encode(['success' => true]); */
-    /*     return; */
-    /* } */
 
     if ('POST' !== $_SERVER['REQUEST_METHOD']) {
         everypay_send_iris_json_response(false, ['message' => 'Method Not Allowed'], 405);
