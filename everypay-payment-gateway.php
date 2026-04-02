@@ -734,7 +734,7 @@ function everypay_handle_iris_callback_request(array $requestData, bool $redirec
         return;
     }
 
-    $payload_array = json_decode($payload_json, true);
+    $payload_array = json_decode($payload_json, true, 512, JSON_THROW_ON_ERROR);
     if (!is_array($payload_array)) {
         $payload_array = [];
     }
