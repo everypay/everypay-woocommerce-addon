@@ -102,7 +102,7 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
         $this->iris_enabled = $this->get_option('everypay_iris_enabled') === 'yes';
         $this->iris_merchant_name = sanitize_text_field($this->get_option('everypay_iris_merchant_name'));
         $this->iris_callback_url = self::get_iris_callback_endpoint_url();
-        $this->iris_webhook_url = self::get_iris_webhook_endpoint_url();
+        $this->iris_webhook_url = $this->get_option('everypay_iris_webhook_url') ?? self::get_iris_webhook_endpoint_url();
         $this->iris_country = 'GR';
 
         if ($this->iris_enabled) {
