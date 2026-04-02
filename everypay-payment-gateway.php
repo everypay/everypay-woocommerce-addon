@@ -37,17 +37,17 @@ function everypay_get_gateway_settings()
     $raw_settings = $wpdb->get_var(
         $wpdb->prepare(
             "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
-            $option_name
-        )
+            $option_name,
+        ),
     );
 
     if (!is_string($raw_settings) || $raw_settings === '') {
-        return array();
+        return [];
     }
 
     $repaired_settings = @unserialize(everypay_recalculate_serialized_string_lengths($raw_settings));
     if (!is_array($repaired_settings)) {
-        return array();
+        return [];
     }
 
     update_option($option_name, $repaired_settings, false);
@@ -85,7 +85,7 @@ function debug($message, ...$params)
         $class,
         $type,
         $function,
-        $line
+        $line,
     );
 
     if (count($params) === 1 && is_array($params[0])) {
@@ -127,7 +127,7 @@ function everypay_init()
         {
 
             $this->init();
-            add_filter('woocommerce_payment_gateways', array($this, 'add_everypay_gateway'));
+            add_filter('woocommerce_payment_gateways', [$this, 'add_everypay_gateway']);
         }
 
         /**
@@ -189,7 +189,7 @@ function everypay_declare_blocks_compatibility()
     \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
         'cart_checkout_blocks',
         __FILE__,
-        true
+        true,
     );
 }
 
@@ -259,23 +259,23 @@ function everypay_find_order_by_iris_reference(string $token = '', string $md = 
     }
 
     if ($token) {
-        $orders = wc_get_orders(array(
+        $orders = wc_get_orders([
             'limit' => 1,
             'meta_key' => 'everypay_source_token',
             'meta_value' => $token,
             'post_status' => $statuses,
-        ));
+        ]);
 
         if (!empty($orders)) {
             return $orders[0];
         }
 
-        $orders = wc_get_orders(array(
+        $orders = wc_get_orders([
             'limit' => 1,
             'meta_key' => 'everypay_payment_token',
             'meta_value' => $token,
             'post_status' => $statuses,
-        ));
+        ]);
 
         if (!empty($orders)) {
             return $orders[0];
@@ -283,12 +283,12 @@ function everypay_find_order_by_iris_reference(string $token = '', string $md = 
     }
 
     if ($md) {
-        $orders = wc_get_orders(array(
+        $orders = wc_get_orders([
             'limit' => 1,
             'meta_key' => 'everypay_iris_md',
             'meta_value' => $md,
             'post_status' => $statuses,
-        ));
+        ]);
 
         if (!empty($orders)) {
             return $orders[0];
@@ -389,11 +389,11 @@ function everypay_find_order_by_iris_reference_with_retry(string $token = '', st
     return null;
 }
 
-function everypay_send_iris_json_response(bool $success, array $data = array(), int $status_code = 200)
+function everypay_send_iris_json_response(bool $success, array $data = [], int $status_code = 200)
 {
     status_header($status_code);
     header('Content-Type: application/json; charset=utf-8');
-    echo wp_json_encode(array_merge(array('success' => $success), $data));
+    echo wp_json_encode(array_merge(['success' => $success], $data));
     return;
 }
 
@@ -451,7 +451,7 @@ function everypay_prepare_iris_order_received_redirect(WC_Order $order): string
         if (WC()->session) {
             $customer = WC()->session->get('customer');
             if (!is_array($customer)) {
-                $customer = array();
+                $customer = [];
             }
 
             $billing_email = $order->get_billing_email();
@@ -488,7 +488,7 @@ function everypay_prepare_iris_order_payment_redirect(WC_Order $order): string
         if (WC()->session) {
             $customer = WC()->session->get('customer');
             if (!is_array($customer)) {
-                $customer = array();
+                $customer = [];
             }
 
             $billing_email = $order->get_billing_email();
@@ -582,7 +582,7 @@ function everypay_maybe_handle_iris_callback_route()
         return;
     }
 
-    everypay_handle_iris_callback_request(true);
+    everypay_handle_iris_callback_request($_POST, true);
     exit;
 }
 
@@ -601,7 +601,9 @@ function everypay_maybe_handle_iris_webhook_route()
         return;
     }
 
-    everypay_handle_iris_callback_request(false);
+    $input = \file_get_contents('php://input');
+    $data = \json_decode($input, true, 512, JSON_THROW_ON_ERROR);
+    everypay_handle_iris_callback_request($data, false);
     exit;
 }
 
@@ -685,38 +687,42 @@ function register_apple_pay_merchant_domain()
 }
 
 
-function everypay_handle_iris_callback_request(bool $redirect_to_order_received = true)
+function everypay_handle_iris_callback_request(array $requestData, bool $redirect_to_order_received = true)
 {
+    error_log('GET => ' . print_r($_GET, true));
+    error_log('POST => ' . print_r($_POST, true));
+    error_log('INPUT => ' . print_r(file_get_contents('php://input'), true));
+
     nocache_headers();
 
-    if ('GET' === $_SERVER['REQUEST_METHOD']) {
-        $token = isset($_GET['token']) ? sanitize_text_field(wp_unslash($_GET['token'])) : '';
-        $md = isset($_GET['md']) ? sanitize_text_field(wp_unslash($_GET['md'])) : '';
-
-        $order = everypay_find_order_by_iris_reference_with_retry($token, $md);
-
-        if ($order instanceof WC_Order) {
-            $redirect_url = everypay_prepare_iris_order_received_redirect($order);
-            if ($redirect_to_order_received && !empty($redirect_url)) {
-                wp_safe_redirect($redirect_url, 303);
-                exit;
-            }
-        }
-
-        status_header(200);
-        header('Content-Type: application/json; charset=utf-8');
-        echo wp_json_encode(['success' => true]);
-        return;
-    }
+    /* if ('GET' === $_SERVER['REQUEST_METHOD']) { */
+    /*     $token = isset($_GET['token']) ? sanitize_text_field(wp_unslash($_GET['token'])) : ''; */
+    /*     $md = isset($_GET['md']) ? sanitize_text_field(wp_unslash($_GET['md'])) : ''; */
+    /**/
+    /*     $order = everypay_find_order_by_iris_reference_with_retry($token, $md); */
+    /**/
+    /*     if ($order instanceof WC_Order) { */
+    /*         $redirect_url = everypay_prepare_iris_order_received_redirect($order); */
+    /*         if ($redirect_to_order_received && !empty($redirect_url)) { */
+    /*             wp_safe_redirect($redirect_url, 303); */
+    /*             exit; */
+    /*         } */
+    /*     } */
+    /**/
+    /*     status_header(200); */
+    /*     header('Content-Type: application/json; charset=utf-8'); */
+    /*     echo wp_json_encode(['success' => true]); */
+    /*     return; */
+    /* } */
 
     if ('POST' !== $_SERVER['REQUEST_METHOD']) {
         everypay_send_iris_json_response(false, ['message' => 'Method Not Allowed'], 405);
         return;
     }
 
-    $post_data = array();
+    $post_data = [];
 
-    foreach (wp_unslash($_POST) as $key => $value) {
+    foreach (wp_unslash($requestData) as $key => $value) {
         $post_data[$key] = is_array($value) ? array_map('sanitize_text_field', $value) : sanitize_text_field($value);
     }
 
@@ -754,14 +760,14 @@ function everypay_handle_iris_callback_request(bool $redirect_to_order_received 
 
     $payload_array = json_decode($payload_json, true);
     if (!is_array($payload_array)) {
-        $payload_array = array();
+        $payload_array = [];
     }
 
-    $data_to_store = array(
+    $data_to_store = [
         'payload' => $payload_array,
         'post' => $post_data,
         'verified' => true,
-    );
+    ];
 
     try {
         if (!class_exists('WC_Everypay_Repository')) {
@@ -823,11 +829,11 @@ function everypay_handle_iris_callback_request(bool $redirect_to_order_received 
                         throw new Exception('IRIS payment failed: missing payment description.');
                     }
 
-                    $payload = array(
+                    $payload = [
                         'amount' => $amount,
                         'description' => $description,
                         'token' => $token,
-                    );
+                    ];
 
                     $billing_email = $order->get_billing_email();
                     if (!empty($billing_email)) {
@@ -868,11 +874,11 @@ function everypay_handle_iris_callback_request(bool $redirect_to_order_received 
                         (new WC_Everypay_Repository())->save_logs(
                             'iris_payment',
                             wp_json_encode(
-                                array(
+                                [
                                     'request' => $payload,
                                     'status' => $payment_response['status'] ?? '',
-                                )
-                            )
+                                ],
+                            ),
                         );
                     } catch (Exception $log_exception) {
                         // Logging failure should not block the payment.
@@ -1024,13 +1030,13 @@ function everypay_create_iris_session()
             $country = WC()->countries->get_base_country();
         }
 
-        $params = array(
+        $params = [
             'amount' => $amount,
             'currency' => $currency,
             'country' => $country,
             'callback_url' => $callback_url,
             'webhook_url' => $webhook_url,
-        );
+        ];
 
         // Each IRIS session must get a fresh reference so callbacks never reuse a previous order mapping.
         $md_reference = everypay_get_iris_reference(0, true);
@@ -1074,11 +1080,11 @@ function everypay_create_iris_session()
         (new WC_Everypay_Repository())->save_logs(
             'iris_session',
             wp_json_encode(
-                array(
+                [
                     'request' => $params,
                     'status' => $response['status'] ?? '',
-                )
-            )
+                ],
+            ),
         );
 
         if (!isset($response['status']) || $response['status'] < 200 || $response['status'] >= 300) {
@@ -1087,10 +1093,10 @@ function everypay_create_iris_session()
             wp_die();
         }
 
-        $data = array(
+        $data = [
             'signature' => $response['body']['signature'] ?? '',
             'uuid' => $response['body']['uuid'] ?? ($params['uuid'] ?? ''),
-        );
+        ];
 
         wp_send_json_success($data);
     } catch (Exception $exception) {
