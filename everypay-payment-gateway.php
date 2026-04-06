@@ -472,11 +472,19 @@ function everypay_prepare_iris_order_received_redirect(WC_Order $order): string
 
 function everypay_get_iris_order_payment_redirect_url(WC_Order $order): string
 {
-    $redirect_url = $order->get_checkout_payment_url();
-    $order_key = $order->get_order_key();
+    $redirect_url = '';
 
-    if (!empty($order_key)) {
-        $redirect_url = add_query_arg('key', $order_key, $redirect_url);
+    if (function_exists('wc_get_checkout_url')) {
+        $redirect_url = wc_get_checkout_url();
+    }
+
+    if (empty($redirect_url)) {
+        $redirect_url = $order->get_checkout_payment_url();
+        $order_key = $order->get_order_key();
+
+        if (!empty($order_key)) {
+            $redirect_url = add_query_arg('key', $order_key, $redirect_url);
+        }
     }
 
     return (string) $redirect_url;
