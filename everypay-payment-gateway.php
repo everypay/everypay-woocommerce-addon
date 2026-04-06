@@ -1032,28 +1032,42 @@ function everypay_create_iris_session()
             'webhook_url' => $webhook_url,
         ];
 
-        // Each IRIS session must get a fresh reference so callbacks never reuse a previous order mapping.
-        $md_reference = everypay_get_iris_reference(0, true);
-
-        if (!empty($md_reference)) {
-            $params['md'] = $md_reference;
-
-            $checkout_order = everypay_ensure_checkout_order();
-            if ($checkout_order instanceof WC_Order) {
-                $saved_reference = (string) $checkout_order->get_meta('everypay_iris_md');
-                if ($saved_reference !== $md_reference) {
-                    $checkout_order->update_meta_data('everypay_iris_md', $md_reference);
-                }
-                $checkout_order->save();
-            }
-        }
-
         if (!empty($_POST['uuid'])) {
             $params['uuid'] = sanitize_text_field(wp_unslash($_POST['uuid']));
         }
 
-        if (!empty($_POST['md'])) {
-            $params['md'] = sanitize_text_field(wp_unslash($_POST['md']));
+        $requested_md = !empty($_POST['md'])
+            ? sanitize_text_field(wp_unslash($_POST['md']))
+            : '';
+
+        if ($requested_md === '') {
+            // Blocks / draft-order flows do not send an md, so create one here.
+            $requested_md = everypay_get_iris_reference(0, true);
+        }
+
+        if (!empty($requested_md)) {
+            $params['md'] = $requested_md;
+
+            $checkout_order = everypay_ensure_checkout_order();
+            if ($checkout_order instanceof WC_Order) {
+                $saved_reference = (string) $checkout_order->get_meta('everypay_iris_md');
+                $requested_order_id = everypay_extract_iris_order_id($requested_md);
+                $should_update_reference = $saved_reference === '';
+
+                if (
+                    !$should_update_reference
+                    && $requested_order_id > 0
+                    && $requested_order_id === (int) $checkout_order->get_id()
+                    && !hash_equals($saved_reference, $requested_md)
+                ) {
+                    $should_update_reference = true;
+                }
+
+                if ($should_update_reference) {
+                    $checkout_order->update_meta_data('everypay_iris_md', $requested_md);
+                    $checkout_order->save();
+                }
+            }
         }
 
         $secret_key = isset($gateway_settings['everypaySecretKey'])
