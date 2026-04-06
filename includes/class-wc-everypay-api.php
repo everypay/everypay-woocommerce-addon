@@ -137,7 +137,8 @@ class WC_Everypay_Api
         curl_setopt($curl, CURLOPT_HTTPHEADER, [
             'User-Agent: EveryPay Internal PHP Library',
         ]);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
 
         curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         curl_setopt($curl, CURLOPT_USERPWD, $apiKey . ':');
