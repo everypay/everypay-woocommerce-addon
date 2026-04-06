@@ -44,7 +44,7 @@ class WC_Everypay_Blocks_Support extends \Automattic\WooCommerce\Blocks\Payments
             'everypay-blocks-utils',
             plugins_url('assets/js/blocks/everypay-blocks-utils.js', dirname(__FILE__)),
             [],
-            defined('EVERYPAY_PLUGIN_VERSION') ? EVERYPAY_PLUGIN_VERSION : '3.9.1',
+            defined('EVERYPAY_PLUGIN_VERSION') ? EVERYPAY_PLUGIN_VERSION : '3.9',
             true,
         );
 
@@ -52,7 +52,7 @@ class WC_Everypay_Blocks_Support extends \Automattic\WooCommerce\Blocks\Payments
             'everypay-blocks-integration',
             plugins_url('assets/js/blocks/everypay-blocks.js', dirname(__FILE__)),
             ['everypay', 'everypay-blocks-utils', 'wc-blocks-registry', 'wc-settings', 'wp-element', 'wp-html-entities', 'wp-i18n'],
-            defined('EVERYPAY_PLUGIN_VERSION') ? EVERYPAY_PLUGIN_VERSION : '3.9.1',
+            defined('EVERYPAY_PLUGIN_VERSION') ? EVERYPAY_PLUGIN_VERSION : '3.9',
             true,
         );
 
@@ -101,7 +101,7 @@ class WC_Everypay_Blocks_Support extends \Automattic\WooCommerce\Blocks\Payments
                 'everypay_helpers',
                 plugins_url('assets/js/helpers.js', dirname(__FILE__)),
                 [],
-                defined('EVERYPAY_PLUGIN_VERSION') ? EVERYPAY_PLUGIN_VERSION : '3.9.1',
+                defined('EVERYPAY_PLUGIN_VERSION') ? EVERYPAY_PLUGIN_VERSION : '3.9',
                 true,
             );
         }
@@ -111,7 +111,7 @@ class WC_Everypay_Blocks_Support extends \Automattic\WooCommerce\Blocks\Payments
                 'everypay_modal',
                 plugins_url('assets/js/everypay_modal.js', dirname(__FILE__)),
                 [],
-                defined('EVERYPAY_PLUGIN_VERSION') ? EVERYPAY_PLUGIN_VERSION : '3.9.1',
+                defined('EVERYPAY_PLUGIN_VERSION') ? EVERYPAY_PLUGIN_VERSION : '3.9',
                 true,
             );
         }
@@ -121,7 +121,7 @@ class WC_Everypay_Blocks_Support extends \Automattic\WooCommerce\Blocks\Payments
                 'everypay',
                 plugins_url('assets/js/everypay.js', dirname(__FILE__)),
                 ['everypay_script', 'everypay_helpers', 'everypay_modal'],
-                defined('EVERYPAY_PLUGIN_VERSION') ? EVERYPAY_PLUGIN_VERSION : '3.9.1',
+                defined('EVERYPAY_PLUGIN_VERSION') ? EVERYPAY_PLUGIN_VERSION : '3.9',
                 true,
             );
         }
@@ -131,7 +131,7 @@ class WC_Everypay_Blocks_Support extends \Automattic\WooCommerce\Blocks\Payments
                 'everypay_styles',
                 plugins_url('assets/css/everypay_styles.css', dirname(__FILE__)),
                 [],
-                defined('EVERYPAY_PLUGIN_VERSION') ? EVERYPAY_PLUGIN_VERSION : '3.9.1',
+                defined('EVERYPAY_PLUGIN_VERSION') ? EVERYPAY_PLUGIN_VERSION : '3.9',
             );
         }
 
@@ -140,7 +140,7 @@ class WC_Everypay_Blocks_Support extends \Automattic\WooCommerce\Blocks\Payments
                 'everypay_modal',
                 plugins_url('assets/css/everypay_modal.css', dirname(__FILE__)),
                 [],
-                defined('EVERYPAY_PLUGIN_VERSION') ? EVERYPAY_PLUGIN_VERSION : '3.9.1',
+                defined('EVERYPAY_PLUGIN_VERSION') ? EVERYPAY_PLUGIN_VERSION : '3.9',
             );
         }
 
