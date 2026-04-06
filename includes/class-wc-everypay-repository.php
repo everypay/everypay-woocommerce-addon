@@ -27,7 +27,17 @@ class WC_Everypay_Repository
 
 	public function delete_user_card($friendly_name, $user_id)
 	{
-		return $this->wpdb->query( "DELETE FROM $this->tokenization_table WHERE wp_user_id = $user_id and friendly_name = '$friendly_name'");
+		return $this->wpdb->delete(
+			$this->tokenization_table,
+			[
+				'wp_user_id' => absint($user_id),
+				'friendly_name' => (string) $friendly_name,
+			],
+			[
+				'%d',
+				'%s',
+			]
+		);
 	}
 
 	public function add_new_card($card_data)
@@ -48,25 +58,30 @@ class WC_Everypay_Repository
 		if (!$friendly_name) {
 			return false;
 		}
-		return $this->wpdb->get_row("
-			SELECT
-			id
-			FROM $this->tokenization_table
-			where customer_token = '$customer_token'
-			and friendly_name = '$friendly_name'
-		");
+		return $this->wpdb->get_row(
+			$this->wpdb->prepare(
+				"SELECT id
+				FROM {$this->tokenization_table}
+				WHERE customer_token = %s
+				AND friendly_name = %s",
+				(string) $customer_token,
+				(string) $friendly_name,
+			)
+		);
 	}
 
 	public function get_customer_cards($user_id)
 	{
-		$user_id = sanitize_text_field($user_id);
-		return $this->wpdb->get_results( "
-				SELECT  
+		return $this->wpdb->get_results(
+			$this->wpdb->prepare(
+				"SELECT
 				friendly_name, customer_token, card_expiration_month, card_expiration_year,
-				card_last_four, card_type, crd       
-				FROM $this->tokenization_table 
-				where wp_user_id = $user_id 
-		");
+				card_last_four, card_type, crd
+				FROM {$this->tokenization_table}
+				WHERE wp_user_id = %d",
+				absint($user_id),
+			)
+		);
 	}
 
 	public function save_customer($customer_data)
@@ -76,8 +91,14 @@ class WC_Everypay_Repository
 
 	public function get_tokenization_customer($user_id)
 	{
-		$user_id = sanitize_text_field($user_id);
-		return $this->wpdb->get_row( "SELECT * FROM $this->tokenization_table where wp_user_id = $user_id" );
+		return $this->wpdb->get_row(
+			$this->wpdb->prepare(
+				"SELECT *
+				FROM {$this->tokenization_table}
+				WHERE wp_user_id = %d",
+				absint($user_id),
+			)
+		);
 	}
 
 
