@@ -1,0 +1,142 @@
+name: Deploy to WordPress.org
+
+on:
+  push:
+    tags:
+      - 'v*'
+      - '[0-9]+.[0-9]+*'
+
+jobs:
+  deploy:
+    name: Deploy plugin to WordPress.org SVN
+    runs-on: ubuntu-latest
+
+    env:
+      PLUGIN_SLUG: everypay-payment-gateway
+      SVN_URL: ${{ secrets.WP_SVN_URL }}
+      SVN_USERNAME: ${{ secrets.WP_SVN_USERNAME }}
+      SVN_PASSWORD: ${{ secrets.WP_SVN_PASSWORD }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        run: |
+          : "${SVN_URL:?WP_SVN_URL secret is not set}"
+          : "${SVN_USERNAME:?WP_SVN_USERNAME secret is not set}"
+          : "${SVN_PASSWORD:?WP_SVN_PASSWORD secret is not set}"
+
+      - name: Resolve plugin version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          if [ -z "$VERSION" ]; then
+            echo "Could not resolve version from tag '$TAG'" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Deploying version: $VERSION"
+
+      - name: Verify version matches readme.txt and plugin header
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          README_VERSION=$(grep -i '^Stable tag:' readme.txt | awk -F': *' '{print $2}' | tr -d '\r' | tr -d ' ')
+          HEADER_VERSION=$(grep -i '^[[:space:]]*\*[[:space:]]*Version:' everypay-payment-gateway.php | awk -F': *' '{print $2}' | tr -d '\r' | tr -d ' ')
+
+          echo "Tag version:    $VERSION"
+          echo "readme.txt:     $README_VERSION"
+          echo "plugin header:  $HEADER_VERSION"
+
+          if [ "$README_VERSION" != "$VERSION" ]; then
+            echo "Stable tag in readme.txt ($README_VERSION) does not match tag version ($VERSION)" >&2
+            exit 1
+          fi
+          if [ "$HEADER_VERSION" != "$VERSION" ]; then
+            echo "Version in plugin header ($HEADER_VERSION) does not match tag version ($VERSION)" >&2
+            exit 1
+          fi
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Install PHP production dependencies
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Install SVN
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y subversion
+
+      - name: Checkout WordPress.org SVN repository
+        run: |
+          svn checkout --depth immediates "$SVN_URL" svn
+          svn update --set-depth infinity svn/trunk
+          svn update --set-depth immediates svn/tags
+          svn update --set-depth immediates svn/branches || true
+          svn update --set-depth infinity svn/assets || true
+
+      - name: Backup current trunk to namespaced branch
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          BACKUP_URL="$SVN_URL/branches/backup-trunk-$VERSION"
+          if svn info "$BACKUP_URL" >/dev/null 2>&1; then
+            echo "Backup branch already exists at $BACKUP_URL — skipping."
+          else
+            svn copy "$SVN_URL/trunk" "$BACKUP_URL" \
+              -m "Backing up trunk before $VERSION release." \
+              --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+              --non-interactive --no-auth-cache
+          fi
+
+      - name: Sync plugin files into SVN trunk
+        run: |
+          rsync -rc --delete \
+            --exclude-from=.distignore \
+            ./ svn/trunk/
+
+      - name: Sync WordPress.org assets
+        run: |
+          if [ -d wp_org_assets ]; then
+            mkdir -p svn/assets
+            rsync -rc --delete wp_org_assets/ svn/assets/
+          fi
+
+      - name: Stage SVN changes
+        working-directory: svn
+        run: |
+          svn add --force trunk/* --auto-props --parents --depth infinity -q
+          svn add --force assets/* --auto-props --parents --depth infinity -q || true
+
+          svn status | awk '/^!/ {print $2}' | xargs -r -I{} svn rm {}
+
+          svn status
+
+      - name: Commit trunk
+        working-directory: svn
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          svn commit -m "Release version $VERSION" \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --non-interactive --no-auth-cache
+
+      - name: Tag the release
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          TAG_URL="$SVN_URL/tags/$VERSION"
+          if svn info "$TAG_URL" >/dev/null 2>&1; then
+            echo "Tag $VERSION already exists in SVN — skipping." >&2
+            exit 1
+          fi
+          svn copy "$SVN_URL/trunk" "$TAG_URL" \
+            -m "Tagging version $VERSION" \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --non-interactive --no-auth-cache
