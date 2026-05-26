@@ -129,7 +129,6 @@ class WC_Everypay_Repository
 
 	public function create_tokenization_table()
 	{
-		$users_table = $this->wpdb->prefix . 'users(ID)';
 		$sql = "CREATE TABLE IF NOT EXISTS ".$this->tokenization_table ." (
           id INT NOT NULL AUTO_INCREMENT,
           wp_user_id bigint(20) UNSIGNED,
@@ -140,7 +139,7 @@ class WC_Everypay_Repository
           card_expiration_year INT UNSIGNED NOT NULL,
           card_last_four INT(4) UNSIGNED NOT NULL,
           card_type VARCHAR(100),
-          FOREIGN KEY (wp_user_id) REFERENCES ".$users_table.",
+          KEY wp_user_id (wp_user_id),
           PRIMARY KEY  (id) 
         ) $this->db_charset_collate;";
 		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
