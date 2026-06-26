@@ -101,7 +101,6 @@ class WC_Everypay_Repository
 		);
 	}
 
-
 	public function drop_tokenization_table()
 	{
 		$sql = "DROP TABLE IF EXISTS ".$this->tokenization_table;
@@ -139,16 +138,10 @@ class WC_Everypay_Repository
           card_expiration_year INT UNSIGNED NOT NULL,
           card_last_four INT(4) UNSIGNED NOT NULL,
           card_type VARCHAR(100),
-          KEY wp_user_id (wp_user_id),
           PRIMARY KEY  (id) 
         ) $this->db_charset_collate;";
 		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
 		dbDelta($sql);
 	}
-
-
-
-
-
 }
