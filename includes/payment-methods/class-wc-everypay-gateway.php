@@ -449,17 +449,10 @@ class WC_Everypay_Gateway extends WC_Payment_Gateway
 
             $error = 'An error occurred. Please try again.';
             wc_add_notice(esc_html($error), 'error');
-            $response_data = [
-                'result' => 'failure',
-                'reload' => true,
-                'refresh' => true,
-            ];
-            echo json_encode($response_data);
-            if ($order_id) {
-                wp_delete_post($order_id, true);
-            }
             (new WC_Everypay_Repository())->save_logs('error', $e->getMessage());
-            exit;
+            return [
+                'result' => 'failure',
+            ];
         }
     }
 
